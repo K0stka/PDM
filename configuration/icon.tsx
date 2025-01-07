@@ -15,24 +15,3 @@ export const AppIcon = ({ className, style }: AppIconProps) => {
 		/>
 	);
 };
-
-export const generateIconPng = (size: number) => {
-	return new ImageResponse(
-		(
-			<AppIcon
-				style={{
-					width: "80%",
-					height: "80%",
-					margin: `${size / 10}px`,
-					padding: `${size / 10}px`,
-					borderRadius: `${size / 10}px`,
-					background: "white",
-				}}
-			/>
-		),
-		{
-			width: size,
-			height: size,
-		}
-	);
-};
