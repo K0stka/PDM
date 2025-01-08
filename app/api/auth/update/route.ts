@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eq, users } from "@/db";
-import { getSessionUserRecord, removeSessionUser } from "@/auth/session";
+import { getSessionUserRecord, removeSessionUserRecord, updateSessionUserRecord } from "@/auth/session-edge";
 
-import { isSessionInvalid } from "@/auth/session-utils";
+import { validateSession } from "@/auth/session";
 
 export const GET = async (req: NextRequest) => {
 	const sessionUser = await getSessionUserRecord();
@@ -13,7 +13,13 @@ export const GET = async (req: NextRequest) => {
 		where: eq(users.id, sessionUser.id),
 	});
 
-	if (!user || isSessionInvalid(user, sessionUser)) await removeSessionUser();
+	if (!user) {
+		await removeSessionUserRecord();
 
-	return NextResponse.redirect(new URL("/logged-out", req.nextUrl));
+		return NextResponse.redirect(new URL("/logged-out", req.nextUrl));
+	}
+
+	if (!validateSession(user, sessionUser)) await updateSessionUserRecord(user);
+
+	return NextResponse.redirect(new URL("/", req.nextUrl));
 };

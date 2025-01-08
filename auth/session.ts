@@ -1,71 +1,66 @@
 import "server-only";
 
-import { JWTPayload, SignJWT, jwtVerify } from "jose";
+import { db, users } from "@/db";
+import { getSessionUserRecord, removeSessionUserRecord, updateSessionUserRecord } from "./session-edge";
 
 import { SessionUserRecord } from "@/lib/types";
+import { User } from "@/lib/types";
 import { cache } from "react";
-import { cookies } from "next/headers";
-import { env } from "@/env";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import { rethrowRedirect } from "@/lib/utils";
 
-const encodedKey = new TextEncoder().encode(env.AUTH_SECRET);
+export const session: () => Promise<User> = cache(async () => {
+	const sessionUser = await getSessionUserRecord();
 
-const session_cookie_name = "session";
-const session_cookie_max_age = 1000 * 60 * 60 * 24 * 7; // 1 week
+	if (!sessionUser) throw new Error("You are not logged in");
 
-export async function setSessionUserRecord(user: SessionUserRecord) {
-	const cookieStore = await cookies();
-
-	const expiresAt = new Date(Date.now() + session_cookie_max_age);
-	const cookie = await encryptSessionUserRecord(user);
-
-	cookieStore.set(session_cookie_name, cookie, {
-		httpOnly: true,
-		secure: true,
-		expires: expiresAt,
-		sameSite: "lax",
-		path: "/",
+	const user = await db.query.users.findFirst({
+		where: eq(users.id, sessionUser.id),
 	});
 
-	redirect("/");
-}
+	if (!user)
+		try {
+			await removeSessionUserRecord();
 
-export const getSessionUserRecord: () => Promise<SessionUserRecord | null> = cache(async () => {
-	const cookieStore = await cookies();
-	const cookie = cookieStore.get(session_cookie_name)?.value;
+			redirect("/logged-out");
+		} catch (e) {
+			rethrowRedirect(e);
 
-	if (!cookie) return null;
+			redirect("/api/auth/update");
+		}
 
-	return decryptSessionUserRecord(cookie);
+	if (!validateSession(user, sessionUser))
+		try {
+			await updateSessionUserRecord(user);
+		} catch {
+			redirect("/api/auth/update");
+		}
+
+	return user;
 });
 
-export async function removeSessionUser() {
-	const cookieStore = await cookies();
-	cookieStore.delete(session_cookie_name);
+export const validateSession = (user: User, sessionUser: SessionUserRecord): boolean => user.isAttending === sessionUser.isAttending && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
 
-	redirect("/");
-}
+type ValidateUserOptions = {
+	throwError?: true;
+	isAttending?: true;
+	isPresenting?: true;
+	isAdmin?: true;
+	classSet?: true;
+};
 
-async function encryptSessionUserRecord(user: SessionUserRecord): Promise<string> {
-	return new SignJWT(user as any).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("7d").sign(encodedKey);
-}
+export const validateUser = (user: User, { throwError, isAttending, isPresenting, isAdmin, classSet }: ValidateUserOptions): boolean => {
+	const valid = (() => {
+		if (isAttending && !user.isAttending) return false;
+		if (isPresenting && !user.isPresenting) return false;
+		if (isAdmin && !user.isAdmin) return false;
+		if (classSet && !user.class) return false;
 
-async function decryptSessionUserRecord(session: string): Promise<SessionUserRecord | null> {
-	try {
-		const { payload } = await jwtVerify(session, encodedKey, {
-			algorithms: ["HS256"],
-		});
+		return true;
+	})();
 
-		return z
-			.object({
-				id: z.number(),
-				isAttending: z.boolean(),
-				isPresenting: z.boolean(),
-				isAdmin: z.boolean(),
-			})
-			.parse(payload);
-	} catch (error) {
-		return null;
-	}
-}
+	if (throwError && !valid) throw new Error("You are not authorized to perform this action");
+
+	return valid;
+};

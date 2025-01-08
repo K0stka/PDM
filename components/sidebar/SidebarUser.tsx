@@ -16,10 +16,10 @@ type SidebarUserProps = {
 
 export function SidebarUser({ user }: SidebarUserProps) {
 	const { isMobile } = useSidebar();
-	const userRole = user.isAdmin ? "Administrátor" : user.isPresenting ? "Prezentující" : user.isAttending ? "Účastník" : null;
+	const userRole = user.isAdmin || true ? "Administrátor" : user.isPresenting ? "Prezentující" : user.isAttending ? "Účastník" : null;
 
 	return (
-		<SidebarMenu className="rounded-2xl p-1 md:rounded-sm md:p-0 transition-colors bg-secondary md:bg-transparent md:hover:bg-secondary">
+		<SidebarMenu className="rounded-2xl p-1 md:pr-2 md:rounded-sm transition-colors bg-secondary md:bg-transparent md:hover:bg-secondary">
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
@@ -28,8 +28,8 @@ export function SidebarUser({ user }: SidebarUserProps) {
 							className="bg-sidebar-accent text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:p-0 h-auto">
 							<Avatar user={user} />
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold text-lg md:text-base">{user.name}</span>
-								<span className="truncate text-xs hidden md:block">{userRole}</span>
+								<span className="truncate font-semibold text-base">{user.name}</span>
+								<span className="truncate text-xs">{userRole}</span>
 							</div>
 							<MoreHorizontal className="ml-auto size-4" />
 						</SidebarMenuButton>

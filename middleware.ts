@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getPages } from "./lib/pages";
-import { getSessionUserRecord } from "./auth/session";
+import { getSessionUserRecord } from "./auth/session-edge";
 
 // 1. Ignore certain paths
 export const config = {
@@ -27,6 +27,6 @@ export async function middleware(req: NextRequest) {
 				if (req.nextUrl.pathname === page.path) return NextResponse.rewrite(new URL("/private" + page.file, req.nextUrl));
 			}
 
-		return NextResponse.rewrite(new URL("/private/not-found", req.nextUrl));
+		return NextResponse.rewrite(new URL("/private", req.nextUrl));
 	} else return NextResponse.rewrite(new URL("/public" + req.nextUrl.pathname, req.nextUrl));
 }

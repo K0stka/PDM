@@ -21,7 +21,7 @@ const SidebarLinks = ({ user }: SidebarLinksProps) => {
 							className="transition-colors hover:bg-accent h-auto">
 							<Link
 								href={item.path}
-								className="text-nowrap flex items-center gap-2 text-xl [&_svg]:size-6 md:text-base md:[&_svg]:size-4">
+								className="text-nowrap flex items-center gap-2 text-base [&_svg]:size-4">
 								{item.icon && <item.icon />}
 
 								{item.name}

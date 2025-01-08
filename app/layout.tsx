@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 	description: manifest.description,
 };
 
-const Layout: NextLayout = ({ children }) => {
+const Layout: NextLayout = async ({ children }) => {
 	return (
 		<html
 			lang="cs"

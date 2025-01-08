@@ -21,6 +21,7 @@ export type User = {
 		light: string;
 		dark: string;
 	};
+	class: string | null;
 } & UserPermissions;
 
 export type SessionUserRecord = {

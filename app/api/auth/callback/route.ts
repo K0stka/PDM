@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eq, users } from "@/db";
 
+import { User } from "@/lib/types";
 import { env } from "@/env";
 import { getColorsFromString } from "@/theme/colors";
-import { setSessionUserRecord } from "@/auth/session";
+import { setSessionUserRecord } from "@/auth/session-edge";
 
 type MicrosoftUserInfo = {
 	id: string;
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
 
 	if (!userInfo) return NextResponse.redirect(new URL("/login-failed", req.nextUrl));
 
-	let user = await db.query.users.findFirst({
+	let user: User | undefined = await db.query.users.findFirst({
 		where: eq(users.microsoftId, userInfo.id),
 	});
 
@@ -78,6 +79,7 @@ export async function GET(req: NextRequest) {
 			name: userInfo.displayName,
 			email: userInfo.mail,
 			colors,
+			class: null,
 			isAttending: false,
 			isPresenting: false,
 			isAdmin: false,
@@ -86,5 +88,5 @@ export async function GET(req: NextRequest) {
 
 	await setSessionUserRecord(user);
 
-	return NextResponse.redirect("/");
+	return NextResponse.redirect(new URL("/", req.nextUrl));
 }
