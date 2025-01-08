@@ -25,9 +25,15 @@ export default function manifest(): MetadataRoute.Manifest {
 		],
 		screenshots: [
 			{
-				src: "/api/icon/icon-512.png",
+				src: "/icons/icon-512.png",
 				sizes: "512x512",
 				type: "image/png",
+			},
+			{
+				src: "/icons/icon-512.png",
+				sizes: "512x512",
+				type: "image/png",
+				form_factor: "wide",
 			},
 		],
 	};
