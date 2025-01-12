@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
 import { db, eq, users } from "@/db";
 import { getSession, removeSession, updateSession } from "@/auth/session-edge";
 
+import { NextResponse } from "next/server";
 import { User } from "@/lib/types";
+import { env } from "@/env";
 import { revalidatePath } from "next/cache";
 import { validateSession } from "@/auth/session";
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
 	const sessionUser = await getSession();
 
 	if (!sessionUser) return NextResponse.error();
@@ -20,11 +21,11 @@ export const GET = async (req: NextRequest) => {
 
 		revalidatePath("/", "layout");
 
-		return NextResponse.redirect(new URL("/logged-out", req.url));
+		return NextResponse.redirect(new URL("/logged-out", env.BASE_URL));
 	}
 
 	if (!validateSession(user, sessionUser)) await updateSession(user);
 
 	revalidatePath("/", "layout");
-	return Response.redirect(new URL("/", req.url), 303);
+	return Response.redirect(new URL("/", env.BASE_URL), 303);
 };

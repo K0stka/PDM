@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
 	const userInfo = await getUserInfoFromCode(code);
 
-	if (!userInfo) return NextResponse.redirect(new URL("/login-failed", req.url));
+	if (!userInfo) return NextResponse.redirect(new URL("/login-failed", env.BASE_URL));
 
 	let user: User | undefined = await db.query.users.findFirst({
 		where: eq(users.microsoftId, userInfo.id),
@@ -89,5 +89,5 @@ export async function GET(req: NextRequest) {
 
 	await setSession(user);
 
-	return NextResponse.redirect(new URL("/", req.url));
+	return NextResponse.redirect(new URL("/", env.BASE_URL));
 }
