@@ -20,11 +20,11 @@ export const GET = async (req: NextRequest) => {
 
 		revalidatePath("/", "layout");
 
-		return NextResponse.redirect(new URL("/logged-out", req.nextUrl));
+		return NextResponse.redirect(new URL("/logged-out", req.url));
 	}
 
 	if (!validateSession(user, sessionUser)) await updateSession(user);
 
 	revalidatePath("/", "layout");
-	return Response.redirect(new URL("/", req.nextUrl), 303);
+	return Response.redirect(new URL("/", req.url), 303);
 };
