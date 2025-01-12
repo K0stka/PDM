@@ -22,7 +22,7 @@ export const users = pgTable(
 export const archetypes = pgTable("archetypes", {
 	id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
 	name: varchar("name", { length: 255 }).notNull(),
-	description: varchar("description", { length: 1023 }).notNull(),
+	description: varchar("description", { length: 2047 }).notNull(),
 });
 
 export const blocks = pgTable("blocks", {

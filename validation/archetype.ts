@@ -15,8 +15,8 @@ export const addArchetypeSchema = z.object({
 		.min(1, {
 			message: "Popis přednášky je povinný",
 		})
-		.max(1023, {
-			message: "Popis přednášky může mít maximálně 1023 znaků",
+		.max(2047, {
+			message: "Popis přednášky může mít maximálně 2047 znaků",
 		}),
 });
 
