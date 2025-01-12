@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 
-import { SessionUserRecord } from "@/lib/types";
+import { Session } from "@/lib/types";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { env } from "@/env";
@@ -18,20 +18,20 @@ const SessionUserRecordSchema = z.object({
 	isAdmin: z.boolean(),
 });
 
-export const getSessionUserRecord: () => Promise<SessionUserRecord | null> = cache(async () => {
+export const getSession: () => Promise<Session | null> = cache(async () => {
 	const cookieStore = await cookies();
 	const cookie = cookieStore.get(session_cookie_name)?.value;
 
 	if (!cookie) return null;
 
-	return decryptSessionUserRecord(cookie);
+	return decryptSession(cookie);
 });
 
-export async function setSessionUserRecord(user: SessionUserRecord) {
+export async function setSession(user: Session) {
 	const cookieStore = await cookies();
 
 	const expiresAt = new Date(Date.now() + session_cookie_max_age);
-	const cookie = await encryptSessionUserRecord(user);
+	const cookie = await encryptSession(user);
 
 	await cookieStore.set(session_cookie_name, cookie, {
 		httpOnly: true,
@@ -42,24 +42,24 @@ export async function setSessionUserRecord(user: SessionUserRecord) {
 	});
 }
 
-export async function updateSessionUserRecord(user: Partial<SessionUserRecord>) {
-	const sessionUser = await getSessionUserRecord();
+export async function updateSession(user: Partial<Session>) {
+	const sessionUser = await getSession();
 
 	if (!sessionUser) return;
 
-	await setSessionUserRecord({ ...sessionUser, ...user });
+	await setSession({ ...sessionUser, ...user });
 }
 
-export async function removeSessionUserRecord() {
+export async function removeSession() {
 	const cookieStore = await cookies();
 	await cookieStore.delete(session_cookie_name);
 }
 
-async function encryptSessionUserRecord(user: SessionUserRecord): Promise<string> {
+async function encryptSession(user: Session): Promise<string> {
 	return new SignJWT(user as any).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("7d").sign(encodedKey);
 }
 
-async function decryptSessionUserRecord(session: string): Promise<SessionUserRecord | null> {
+async function decryptSession(session: string): Promise<Session | null> {
 	try {
 		const { payload } = await jwtVerify(session, encodedKey, {
 			algorithms: ["HS256"],

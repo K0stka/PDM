@@ -1,27 +1,43 @@
 import "server-only";
 
 import { db, users } from "@/db";
-import { getSessionUserRecord, removeSessionUserRecord, updateSessionUserRecord } from "./session-edge";
+import { getSession, removeSession, updateSession } from "./session-edge";
 
-import { SessionUserRecord } from "@/lib/types";
+import { Session } from "@/lib/types";
 import { User } from "@/lib/types";
 import { cache } from "react";
+import { env } from "@/env";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { rethrowRedirect } from "@/lib/utils";
 
 export const session: () => Promise<User> = cache(async () => {
-	const sessionUser = await getSessionUserRecord();
+	const session = await getSession();
 
-	if (!sessionUser) throw new Error("You are not logged in");
+	if (!session) throw Error("You are not logged in");
 
-	const user = await db.query.users.findFirst({
-		where: eq(users.id, sessionUser.id),
-	});
+	const user: User | undefined = env.OFFLINE_MODE
+		? {
+				id: 1,
+				microsoftId: "",
+				name: "Jan Kostka",
+				email: "kostkaj@gytool.cz",
+				colors: {
+					light: "#FFFFFF",
+					dark: "#000000",
+				},
+				class: "IV.A4",
+				isAttending: true,
+				isPresenting: true,
+				isAdmin: true,
+		  }
+		: await db.query.users.findFirst({
+				where: eq(users.id, session.id),
+		  });
 
 	if (!user)
 		try {
-			await removeSessionUserRecord();
+			await removeSession();
 
 			redirect("/logged-out");
 		} catch (e) {
@@ -30,9 +46,9 @@ export const session: () => Promise<User> = cache(async () => {
 			redirect("/api/auth/update");
 		}
 
-	if (!validateSession(user, sessionUser))
+	if (!validateSession(user, session))
 		try {
-			await updateSessionUserRecord(user);
+			await updateSession(user);
 		} catch {
 			redirect("/api/auth/update");
 		}
@@ -40,7 +56,7 @@ export const session: () => Promise<User> = cache(async () => {
 	return user;
 });
 
-export const validateSession = (user: User, sessionUser: SessionUserRecord): boolean => user.isAttending === sessionUser.isAttending && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
+export const validateSession = (user: User, sessionUser: Session): boolean => user.isAttending === sessionUser.isAttending && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
 
 type ValidateUserOptions = {
 	throwError?: true;

@@ -1,66 +1,53 @@
-"use client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SquareCheck, SquareX } from "lucide-react";
 
-import { fetchWithServerAction, useServerAction } from "@/hooks/use-server-action";
-import { test, test2 } from "@/actions/test";
-
-import { Button } from "@/components/ui/button";
+import ClassSelector from "./_components/classSelector";
 import { NextPage } from "next";
 import PageTemplate from "@/components/utility/PageTemplate";
+import { session } from "@/auth/session";
 
-const SettingsPage: NextPage = () => {
-	console.log("SettingsPage");
-
-	const { data, loading, updating, refresh } = fetchWithServerAction({
-		action: () => {
-			console.log("action");
-			return test("asi nevim");
-		},
-		initial: { id: "" },
-		// refreshAfter: 5,
-	});
-
-	const { action, pending, buttonDisabled } = useServerAction({
-		action: test2,
-		loadingToast: ["Hi", { description: "I'm loading" }],
-		successToast: ["Success"],
-		errorToastTitle: "Error",
-		serverErrorToastTitle: "Server error",
-		onError: console.error,
-		onServerError: console.error,
-		onFinished: () => console.log("Finished"),
-		onSuccess: (result) => console.log("Success", result),
-	});
+const SettingsPage: NextPage = async () => {
+	const user = await session();
 
 	return (
 		<PageTemplate title="Nastavení">
-			<span suppressHydrationWarning>Time: {new Date().getTime()}</span>
-			<br />
-			Data: {JSON.stringify(data)}
-			<br />
-			Loading: {loading.toString()}
-			<br />
-			Updating: {updating.toString()}
-			<br />
-			<Button onClick={refresh}>Refresh</Button>
-			<br />
-			<br />
-			<Button
-				onClick={() => action("user-error")}
-				{...buttonDisabled}>
-				{pending ? "Pending" : "User error"}
-			</Button>
-			<br />
-			<Button
-				onClick={() => action("server-error")}
-				{...buttonDisabled}>
-				{pending ? "Pending" : "Server error"}
-			</Button>
-			<br />
-			<Button
-				onClick={() => action("success")}
-				{...buttonDisabled}>
-				{pending ? "Pending" : "Success"}
-			</Button>
+			<div className="flex flex-col gap-5">
+				<Card>
+					<CardHeader>
+						<CardTitle>Informace o účtu</CardTitle>
+						<CardDescription>V případě, že jsou uvedené informace nesprávné, kontaktujte prosím organizátora akce.</CardDescription>
+					</CardHeader>
+					<CardContent className="inline-grid grid-cols-2 gap-2 items-center">
+						<b>Jméno a příjmení:</b> <span>{user.name}</span>
+						<b>Mail:</b> <span>{user.email}</span>
+						<b>Účastník akce:</b>
+						{user.isAttending ? (
+							<span>
+								<SquareCheck className="bg-lime-500 text-white rounded size-5 mr-2" />
+								Ano
+							</span>
+						) : (
+							<span>
+								<SquareX className="bg-red-500 text-white rounded size-5 mr-2" />
+								Ne
+							</span>
+						)}
+						<b>Prezentující:</b>
+						{user.isPresenting ? (
+							<span>
+								<SquareCheck className="bg-lime-500 text-white rounded size-5 mr-2" />
+								Ano
+							</span>
+						) : (
+							<span>
+								<SquareX className="bg-red-500 text-white rounded size-5 mr-2" />
+								Ne
+							</span>
+						)}
+					</CardContent>
+				</Card>
+				{user.isAttending && <ClassSelector />}
+			</div>
 		</PageTemplate>
 	);
 };

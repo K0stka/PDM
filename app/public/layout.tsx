@@ -24,9 +24,9 @@ const Layout: NextLayout = ({ children }) => {
 					<Button
 						size="icon"
 						variant="outline"
-						className="flex w-auto cursor-default items-center gap-2 px-2">
-						Projekt
-						<SRGH className="size-12 shrink-0 bg-white p-[1px] rounded-sm scale-125" />
+						className="flex w-auto cursor-default hover:bg-background items-center gap-2 px-2">
+						Akce
+						<SRGH className="size-12 scale-125 shrink-0" />
 						SRGH
 					</Button>
 				</div>

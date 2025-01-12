@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Microsoft from "@/components/icons/Microsoft";
 import { NextPage } from "next";
 import { configuration } from "@/configuration/configuration";
-import { login } from "@/auth/actions";
+import { login } from "@/actions/auth";
 
 const LoginPage: NextPage = () => {
 	return (

@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Microsoft from "@/components/icons/Microsoft";
 import { NextPage } from "next";
-import SRGH from "@/components/icons/SRGH";
-import { login } from "@/auth/actions";
+import { login } from "@/actions/auth";
 
 const LoginFailedPage: NextPage = async () => {
 	return (

@@ -10,5 +10,9 @@ export const env = z
 		MICROSOFT_CLIENT_ID: z.string().readonly(),
 		MICROSOFT_CLIENT_SECRET: z.string().readonly(),
 		MICROSOFT_TENANT_ID: z.string().readonly(),
+		OFFLINE_MODE: z
+			.enum(["true", "false"])
+			.transform((e) => e === "true")
+			.readonly(),
 	})
 	.parse(process.env);

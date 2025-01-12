@@ -6,10 +6,9 @@ import SRGH from "../icons/SRGH";
 import SidebarLinks from "./SidebarLinks";
 import SidebarLogo from "./SidebarLogo";
 import { SidebarUser } from "@/components/sidebar/SidebarUser";
-import { User } from "@/lib/types";
 import { configuration } from "@/configuration/configuration";
 
-export function Sidebar({ user, ...props }: React.ComponentProps<typeof ShadCnSidebar> & { user: User }) {
+export function Sidebar({ ...props }: React.ComponentProps<typeof ShadCnSidebar>) {
 	return (
 		<ShadCnSidebar
 			collapsible="icon"
@@ -19,13 +18,15 @@ export function Sidebar({ user, ...props }: React.ComponentProps<typeof ShadCnSi
 				<SidebarLogo />
 			</SidebarHeader>
 			<SidebarContent>
-				<SidebarLinks user={user} />
+				<SidebarLinks />
 			</SidebarContent>
 			<SidebarFooter>
-				<SidebarUser user={user} />
+				<SidebarUser />
 				{configuration.SRGHBranding && (
-					<div className="md:hidden flex items-center justify-center text-secondary gap-2 mt-2">
-						Akce <SRGH className="grayscale" /> SRGH
+					<div className="md:hidden flex items-center justify-center opacity-50 gap-2 mt-2">
+						Akce
+						<SRGH variant="outline" />
+						SRGH
 					</div>
 				)}
 			</SidebarFooter>

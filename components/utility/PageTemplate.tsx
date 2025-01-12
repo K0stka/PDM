@@ -1,4 +1,5 @@
 import { ButtonProps } from "../ui/button";
+import { LucideIcon } from "lucide-react";
 import PageTemplateTitle from "./PageTemplateTitle";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,7 @@ interface PageTemplateProps {
 	actions?: {
 		id: string;
 		text: string;
-		icon?: React.ReactNode;
+		icon?: React.ReactElement<LucideIcon>;
 		onClick: () => void;
 		props?: ButtonProps;
 	}[];
@@ -18,7 +19,7 @@ interface PageTemplateProps {
 const PageTemplate = ({ title, children, actions, footer }: PageTemplateProps) => {
 	return (
 		<div
-			className={cn("relative box-border grid min-h-full gap-5 overflow-y-auto md:h-dvh md:overflow-y-hidden md:p-10", {
+			className={cn("relative box-border grid min-h-full gap-5 md:h-dvh md:overflow-y-hidden md:p-10", {
 				"grid-rows-[auto,1fr]": !!title && !footer,
 				"grid-rows-[auto,1fr,auto]": !!title && !!footer,
 				"grid-rows-[1fr,auto]": !title && !!footer,

@@ -3,13 +3,13 @@
 import { User } from "@/lib/types";
 import { createContext } from "react";
 
-export const AuthContext = createContext<User>({} as User);
+export const UserContext = createContext<User>({} as User);
 
-interface AuthProviderProps {
+interface UserProviderProps {
 	children: React.ReactNode;
 	user: User;
 }
 
-export const AuthProvider = ({ children, user }: AuthProviderProps) => {
-	return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>;
+export const UserProvider = ({ children, user }: UserProviderProps) => {
+	return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };

@@ -1,36 +1,100 @@
-import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
+import { PageInfo, getPages } from "@/lib/pages";
+import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "../ui/sidebar";
 
 import Link from "next/link";
-import { User } from "@/lib/types";
-import { getPages } from "@/lib/pages";
+import { UserContext } from "../context/auth";
+import { getRoleName } from "@/lib/roles";
+import { use } from "react";
 
-interface SidebarLinksProps {
-	user: User;
-}
-
-const SidebarLinks = ({ user }: SidebarLinksProps) => {
-	const pages = getPages(user).filter((page) => page.showInSidebar);
+const SidebarLinksGroup = ({ title, pages }: { title?: string; pages: (PageInfo & { showInSidebar: true })[] }) => {
+	const { setOpenMobile } = useSidebar();
 
 	return (
 		<SidebarGroup>
-			<SidebarMenu>
-				{pages.map((item) => (
-					<SidebarMenuItem key={item.path}>
-						<SidebarMenuButton
-							asChild
-							className="transition-colors hover:bg-accent h-auto">
-							<Link
-								href={item.path}
-								className="text-nowrap flex items-center gap-2 text-base [&_svg]:size-4">
-								{item.icon && <item.icon />}
+			{title && <SidebarGroupLabel>{title}</SidebarGroupLabel>}
+			<SidebarGroupContent>
+				<SidebarMenu>
+					{pages.map((page) => (
+						<SidebarMenuItem key={page.path}>
+							<SidebarMenuButton
+								asChild
+								className="transition-colors hover:bg-accent h-auto">
+								<Link
+									onClick={() => setOpenMobile(false)}
+									href={page.path}
+									className="text-nowrap flex items-center gap-2 text-base [&_svg]:size-4">
+									<page.icon />
 
-								{item.name}
-							</Link>
-						</SidebarMenuButton>
-					</SidebarMenuItem>
-				))}
-			</SidebarMenu>
+									{page.name}
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					))}
+				</SidebarMenu>
+			</SidebarGroupContent>
 		</SidebarGroup>
+	);
+};
+
+const SidebarLinks = () => {
+	const user = use(UserContext);
+
+	const pages = getPages(user) as (PageInfo & { showInSidebar: true })[];
+
+	const categories = [
+		{
+			pages: [] as (PageInfo & { showInSidebar: true })[],
+		},
+		{
+			title: getRoleName("attending"),
+			pages: [] as (PageInfo & { showInSidebar: true })[],
+		},
+		{
+			title: getRoleName("presenting"),
+			pages: [] as (PageInfo & { showInSidebar: true })[],
+		},
+		{
+			title: getRoleName("admin"),
+			pages: [] as (PageInfo & { showInSidebar: true })[],
+		},
+	];
+
+	pages.forEach((page) => {
+		if (!page.showInSidebar) return;
+
+		switch (page.category) {
+			case "attending":
+				categories[1].pages.push(page);
+				break;
+			case "presenting":
+				categories[2].pages.push(page);
+				break;
+			case "admin":
+				categories[3].pages.push(page);
+				break;
+			default:
+				categories[0].pages.push(page);
+		}
+	});
+
+	const showTitles = (categories[1].pages.length > 0 ? 1 : 0) + (categories[2].pages.length > 0 ? 1 : 0) + (categories[3].pages.length > 0 ? 1 : 0) > 1;
+
+	return (
+		<>
+			{showTitles ? (
+				categories
+					.filter((category) => category.pages.length > 0)
+					.map((category, i) => (
+						<SidebarLinksGroup
+							key={i}
+							title={category.title}
+							pages={category.pages}
+						/>
+					))
+			) : (
+				<SidebarLinksGroup pages={pages} />
+			)}
+		</>
 	);
 };
 

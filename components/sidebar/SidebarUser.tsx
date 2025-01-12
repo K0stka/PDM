@@ -7,16 +7,15 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import Avatar from "../Avatar";
 import Link from "next/link";
 import ThemePicker from "../utility/ThemePicker";
-import { User } from "@/lib/types";
-import { logout } from "@/auth/actions";
+import { UserContext } from "../context/auth";
+import { getUserRoleName } from "@/lib/roles";
+import { logout } from "@/actions/auth";
+import { use } from "react";
 
-type SidebarUserProps = {
-	user: User;
-};
+export function SidebarUser() {
+	const user = use(UserContext);
 
-export function SidebarUser({ user }: SidebarUserProps) {
-	const { isMobile } = useSidebar();
-	const userRole = user.isAdmin || true ? "Administrátor" : user.isPresenting ? "Prezentující" : user.isAttending ? "Účastník" : null;
+	const { isMobile, setOpenMobile } = useSidebar();
 
 	return (
 		<SidebarMenu className="rounded-2xl p-1 md:pr-2 md:rounded-sm transition-colors bg-secondary md:bg-transparent md:hover:bg-secondary">
@@ -29,7 +28,7 @@ export function SidebarUser({ user }: SidebarUserProps) {
 							<Avatar user={user} />
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-semibold text-base">{user.name}</span>
-								<span className="truncate text-xs">{userRole}</span>
+								<span className="truncate text-xs">{getUserRoleName(user)}</span>
 							</div>
 							<MoreHorizontal className="ml-auto size-4" />
 						</SidebarMenuButton>
@@ -52,7 +51,9 @@ export function SidebarUser({ user }: SidebarUserProps) {
 						<ThemePicker variant="sidebar" />
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							<Link href="/settings">
+							<Link
+								href="/settings"
+								onClick={() => setOpenMobile(false)}>
 								<DropdownMenuItem className="cursor-pointer">
 									<Settings />
 									Nastavení

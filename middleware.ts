@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getPages } from "./lib/pages";
-import { getSessionUserRecord } from "./auth/session-edge";
+import { getSession } from "./auth/session-edge";
 
 // 1. Ignore certain paths
 export const config = {
@@ -10,7 +10,7 @@ export const config = {
 
 export async function middleware(req: NextRequest) {
 	// 2. Get the currently logged in user
-	const user = await getSessionUserRecord();
+	const user = await getSession();
 
 	// 3. Redirect
 	if (user) {

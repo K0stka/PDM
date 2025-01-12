@@ -2,8 +2,8 @@
 
 import { Button, ButtonProps } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { LucideIcon, MoreHorizontal } from "lucide-react";
 
-import { MoreHorizontal } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageTemplateTitleProps {
@@ -11,7 +11,7 @@ interface PageTemplateTitleProps {
 	actions?: {
 		id: string;
 		text: string;
-		icon?: React.ReactNode;
+		icon?: React.ReactElement<LucideIcon>;
 		onClick: () => void;
 		props?: ButtonProps;
 	}[];

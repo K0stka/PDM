@@ -1,9 +1,8 @@
 "use client";
 
-import { AsyncFunctionDetails, ToastProps } from "@/lib/utilityTypes";
+import { AsyncFunctionDetails, ToastProps, UserErrorType } from "@/lib/utilityTypes";
 import { useEffect, useState } from "react";
 
-import { UserError } from "@/lib/utils";
 import { toast } from "sonner";
 
 type UseServerActionHook = <F>(options: {
@@ -11,15 +10,14 @@ type UseServerActionHook = <F>(options: {
 	loadingToast: string | Omit<ToastProps, "description"> | false;
 	successToast: string | Omit<ToastProps, "description"> | false;
 	errorToastTitle: string | Omit<ToastProps, "description"> | false;
-	serverErrorToastTitle: string | Omit<ToastProps, "description"> | false;
+	serverErrorToastTitle?: string | Omit<ToastProps, "description"> | false;
 	onSuccess?: (result: AsyncFunctionDetails<typeof options.action>["result"]) => void;
-	onError?: (error: UserError) => void;
+	onError?: (error: UserErrorType) => void;
 	onServerError?: (error: Error) => void;
 	onFinished?: () => void;
 }) => {
 	action: typeof options.action;
 	pending: boolean;
-	buttonDisabled: { disabled: boolean };
 };
 
 const transformToastParams = (params: string | Omit<ToastProps, "description">, description?: string): ToastProps => (typeof params === "string" ? [params, { description }] : description ? [params[0], { ...params[1], description }] : params);
@@ -35,34 +33,36 @@ export const useServerAction: UseServerActionHook = ({ action, loadingToast, suc
 		return new Promise<AsyncFunctionDetails<typeof action>["result"]>((resolve, reject) => {
 			action
 				.call(null, ...params)
-				.then((result) => {
+				.then(async (result) => {
 					if (loadingToastId) toast.dismiss(loadingToastId);
 
-					if (successToast) toast.success(...transformToastParams(successToast));
+					if (result?.type === "error") {
+						if (errorToastTitle) toast.error(...transformToastParams(errorToastTitle, result.message));
 
-					if (onSuccess) onSuccess(result);
+						if (onError) await onError(result);
 
-					resolve(result);
-				})
-				.catch((error) => {
-					if (loadingToastId) toast.dismiss(loadingToastId);
-
-					if (error instanceof UserError) {
-						if (errorToastTitle) toast.error(...transformToastParams(errorToastTitle, error.message));
-
-						if (onError) onError(error);
+						reject(result);
 					} else {
-						if (serverErrorToastTitle) toast.warning(...transformToastParams(serverErrorToastTitle, error.message));
+						if (successToast) toast.success(...transformToastParams(successToast));
 
-						if (onServerError) onServerError(error);
+						if (onSuccess) await onSuccess(result);
+
+						resolve(result);
 					}
+				})
+				.catch(async (error) => {
+					if (loadingToastId) toast.dismiss(loadingToastId);
+
+					if (serverErrorToastTitle !== false) toast.warning(...transformToastParams(serverErrorToastTitle ?? "Nastala neočekávaná chyba", error.message));
+
+					if (onServerError) await onServerError(error);
 
 					reject(error);
 				})
-				.finally(() => {
+				.finally(async () => {
 					setPending(false);
 
-					if (onFinished) onFinished();
+					if (onFinished) await onFinished();
 				});
 		});
 	};
@@ -70,7 +70,6 @@ export const useServerAction: UseServerActionHook = ({ action, loadingToast, suc
 	return {
 		action: wrappedAction as typeof action,
 		pending,
-		buttonDisabled: { disabled: pending },
 	};
 };
 

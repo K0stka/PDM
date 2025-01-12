@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { UserError as UserErrorType } from "./utils";
 
 export type NextLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => JSX.Element | Promise<JSX.Element>;
 
@@ -17,3 +18,10 @@ export type FunctionDetails<F> = F extends (...args: infer Args) => infer Result
 export type AsyncFunctionDetails<F> = F extends (...args: infer Args) => Promise<infer Result> ? { args: Args; result: Result } : never;
 
 export type ToastProps = FunctionDetails<typeof toast.success>["args"];
+
+export interface UserErrorType {
+	type: "error";
+	message: string;
+}
+
+export type ServerActionResponse<T> = Either<UserErrorType, T>;

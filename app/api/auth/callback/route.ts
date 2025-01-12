@@ -4,7 +4,7 @@ import { db, eq, users } from "@/db";
 import { User } from "@/lib/types";
 import { env } from "@/env";
 import { getColorsFromString } from "@/theme/colors";
-import { setSessionUserRecord } from "@/auth/session-edge";
+import { setSession } from "@/auth/session-edge";
 
 type MicrosoftUserInfo = {
 	id: string;
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 		};
 	}
 
-	await setSessionUserRecord(user);
+	await setSession(user);
 
 	return NextResponse.redirect(new URL("/", req.nextUrl));
 }

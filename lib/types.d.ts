@@ -1,10 +1,15 @@
-export interface AppConfiguration {
+export type AppConfiguration = Readonly<{
 	appName: string;
 	appShortName?: string;
 	appDescription: string;
 	appThemeColor: string;
 	SRGHBranding: boolean;
-}
+	allowEventInterestVoting: boolean;
+	collectAttendance: boolean;
+	openClaimsOn: Date;
+	closeClaimsOn: Date;
+	validClasses: [string, ...string[]];
+}>;
 
 export interface UserPermissions {
 	isAttending: boolean;
@@ -24,6 +29,58 @@ export type User = {
 	class: string | null;
 } & UserPermissions;
 
-export type SessionUserRecord = {
+export type Session = {
 	id: User["id"];
 } & UserPermissions;
+
+export type Archetype = {
+	id: number;
+	name: string;
+	description: string;
+};
+
+export type Block = {
+	id: number;
+	from: Date;
+	to: Date;
+};
+
+export type Place = {
+	id: number;
+	name: string;
+};
+
+export type Event = {
+	id: number;
+	archetype: Archetype;
+	block: Block;
+	place: Place;
+	capacity: number;
+};
+
+export type Presenter = {
+	id: number;
+	user: User;
+	event: Event;
+};
+
+export type Interest = {
+	id: number;
+	user: User;
+	archetype: Archetype;
+};
+
+export type Claim = {
+	id: number;
+	user: User;
+	archetype: Archetype;
+	block: Block;
+	timestamp: Date;
+};
+
+export type Attendance = {
+	id: number;
+	user: User;
+	event: Event;
+	wasPresent: boolean;
+};
