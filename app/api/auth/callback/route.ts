@@ -81,6 +81,7 @@ export async function GET(req: NextRequest) {
 			colors,
 			class: null,
 			isAttending: false,
+			isTeacher: false,
 			isPresenting: false,
 			isAdmin: false,
 		};

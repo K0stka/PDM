@@ -25,9 +25,9 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 
 	const { action, pending } = useServerAction({
 		action: addArchetype,
-		successToast: "Dílna byla úspěšně přidána",
-		errorToastTitle: "Při přidávání dílny došlo k chybě",
-		loadingToast: "Přidávání dílny...",
+		successToast: "Přednáška byla úspěšně přidána",
+		errorToastTitle: "Při přidávání přednášky došlo k chybě",
+		loadingToast: "Přidávání přednášky...",
 		onSuccess: () => setOpen(false),
 	});
 
@@ -47,7 +47,7 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 	return (
 		<DialogContent>
 			<DialogHeader>
-				<DialogTitle>Přidat dílnu</DialogTitle>
+				<DialogTitle>Přidat přednášku</DialogTitle>
 			</DialogHeader>
 			<div className="flex flex-col space-y-2">
 				<Label htmlFor="name">Název</Label>

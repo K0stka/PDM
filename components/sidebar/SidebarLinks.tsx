@@ -39,7 +39,7 @@ const SidebarLinksGroup = ({ title, pages }: { title?: string; pages: (PageInfo 
 const SidebarLinks = () => {
 	const user = use(UserContext);
 
-	const pages = getPages(user) as (PageInfo & { showInSidebar: true })[];
+	const pages = getPages(user).filter((page) => page.showInSidebar) as (PageInfo & { showInSidebar: true })[];
 
 	const categories = [
 		{
@@ -60,8 +60,6 @@ const SidebarLinks = () => {
 	];
 
 	pages.forEach((page) => {
-		if (!page.showInSidebar) return;
-
 		switch (page.category) {
 			case "attending":
 				categories[1].pages.push(page);

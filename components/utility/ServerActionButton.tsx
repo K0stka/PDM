@@ -10,9 +10,9 @@ const ServerActionButton = ({ pending, ...props }: ServerActionButtonProps) => {
 	return (
 		<Button
 			{...props}
-			disabled={pending || props.disabled}
-			children={!pending ? props.children : <Spinner inline />}
-		/>
+			disabled={pending || props.disabled}>
+			{!pending ? props.children : <Spinner inline />}
+		</Button>
 	);
 };
 

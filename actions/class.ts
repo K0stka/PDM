@@ -5,9 +5,8 @@ import { db, eq, users } from "@/db";
 import { session, validateUser } from "@/auth/session";
 
 import { ClassSelectorForm } from "@/validation/class";
-import { revalidatePath } from "next/cache";
 
-export const setClass = async (values: { className: string }, revalidatePathOnSuccess?: string) => {
+export const setClass = async (values: { className: string }) => {
 	const user = await session();
 
 	validateUser(user, {
@@ -19,12 +18,12 @@ export const setClass = async (values: { className: string }, revalidatePathOnSu
 
 	if (error) return UserError(error);
 
+	if (validated.className === user.class) return;
+
 	await db
 		.update(users)
 		.set({
 			class: validated.className,
 		})
 		.where(eq(users.id, user.id));
-
-	if (revalidatePathOnSuccess) revalidatePath(revalidatePathOnSuccess);
 };

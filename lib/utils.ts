@@ -1,15 +1,14 @@
 import { clsx, type ClassValue } from "clsx";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { twMerge } from "tailwind-merge";
-import { Either, UserErrorType } from "./utilityTypes";
+import { UserErrorType } from "./utilityTypes";
 import { ZodError } from "zod";
-import { Archetype } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-export const rethrowRedirect = (error: any) => {
+export const rethrowRedirect = (error: unknown) => {
 	if (isRedirectError(error)) throw error;
 };
 

@@ -65,7 +65,7 @@ const EditArchetype = ({ archetype }: EditArchetypeProps) => {
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Upravit dílnu</DialogTitle>
+					<DialogTitle>Upravit přednášku</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-col space-y-2">
 					<Label htmlFor="name">Název</Label>

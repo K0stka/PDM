@@ -40,7 +40,7 @@ export const editArchetype = async (data: editArchetypeSchema) => {
 		where: eq(archetypes.id, archetype.id),
 	});
 
-	if (!exists) return UserError("Neplatné ID dílny");
+	if (!exists) return UserError("Neplatné ID přednášky");
 
 	await db
 		.update(archetypes)

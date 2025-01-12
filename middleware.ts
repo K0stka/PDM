@@ -14,11 +14,7 @@ export async function middleware(req: NextRequest) {
 
 	// 3. Redirect
 	if (user) {
-		const pages = getPages({
-			isAttending: user.isAttending,
-			isPresenting: user.isPresenting,
-			isAdmin: user.isAdmin,
-		});
+		const pages = getPages(user);
 
 		for (const page of pages)
 			if (page.extendable) {

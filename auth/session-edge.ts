@@ -14,6 +14,7 @@ const session_cookie_max_age = 1000 * 60 * 60 * 24 * 7; // 1 week
 const SessionUserRecordSchema = z.object({
 	id: z.number(),
 	isAttending: z.boolean(),
+	isTeacher: z.boolean(),
 	isPresenting: z.boolean(),
 	isAdmin: z.boolean(),
 });

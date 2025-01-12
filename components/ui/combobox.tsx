@@ -16,7 +16,7 @@ type ComboBoxValue = {
 };
 
 interface ComboBoxProps {
-	value: string | null;
+	value: string | undefined | null;
 	onChange: (value: string) => void;
 	values: ComboBoxValue[];
 	placeholder?: string;

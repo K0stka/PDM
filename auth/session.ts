@@ -6,7 +6,6 @@ import { getSession, removeSession, updateSession } from "./session-edge";
 import { Session } from "@/lib/types";
 import { User } from "@/lib/types";
 import { cache } from "react";
-import { env } from "@/env";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { rethrowRedirect } from "@/lib/utils";
@@ -16,24 +15,9 @@ export const session: () => Promise<User> = cache(async () => {
 
 	if (!session) throw Error("You are not logged in");
 
-	const user: User | undefined = env.OFFLINE_MODE
-		? {
-				id: 1,
-				microsoftId: "",
-				name: "Jan Kostka",
-				email: "kostkaj@gytool.cz",
-				colors: {
-					light: "#FFFFFF",
-					dark: "#000000",
-				},
-				class: "IV.A4",
-				isAttending: true,
-				isPresenting: true,
-				isAdmin: true,
-		  }
-		: await db.query.users.findFirst({
-				where: eq(users.id, session.id),
-		  });
+	const user: User | undefined = await db.query.users.findFirst({
+		where: eq(users.id, session.id),
+	});
 
 	if (!user)
 		try {
@@ -56,7 +40,8 @@ export const session: () => Promise<User> = cache(async () => {
 	return user;
 });
 
-export const validateSession = (user: User, sessionUser: Session): boolean => user.isAttending === sessionUser.isAttending && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
+export const validateSession = (user: User, sessionUser: Session): boolean =>
+	user.isAttending === sessionUser.isAttending && user.isTeacher === sessionUser.isTeacher && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
 
 type ValidateUserOptions = {
 	throwError?: true;

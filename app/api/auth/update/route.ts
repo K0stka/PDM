@@ -3,7 +3,6 @@ import { db, eq, users } from "@/db";
 import { getSession, removeSession, updateSession } from "@/auth/session-edge";
 
 import { User } from "@/lib/types";
-import { env } from "@/env";
 import { revalidatePath } from "next/cache";
 import { validateSession } from "@/auth/session";
 
@@ -12,24 +11,9 @@ export const GET = async (req: NextRequest) => {
 
 	if (!sessionUser) return NextResponse.error();
 
-	const user: User | undefined = env.OFFLINE_MODE
-		? {
-				id: 1,
-				microsoftId: "",
-				name: "Jan Kostka",
-				email: "kostkaj@gytool.cz",
-				colors: {
-					light: "#FFFFFF",
-					dark: "#000000",
-				},
-				class: "IV.A4",
-				isAttending: true,
-				isPresenting: true,
-				isAdmin: true,
-		  }
-		: await db.query.users.findFirst({
-				where: eq(users.id, sessionUser.id),
-		  });
+	const user: User | undefined = await db.query.users.findFirst({
+		where: eq(users.id, sessionUser.id),
+	});
 
 	if (!user) {
 		await removeSession();

@@ -14,12 +14,7 @@ import { useForm } from "react-hook-form";
 import { useServerAction } from "@/hooks/use-server-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-interface ClassSelectorProps {
-	title?: string;
-	revalidatePathOnSuccess?: true;
-}
-
-const ClassSelector = ({ title, revalidatePathOnSuccess }: ClassSelectorProps) => {
+const ClassSelector = () => {
 	const user = use(UserContext);
 
 	const { action, pending } = useServerAction({
@@ -36,14 +31,12 @@ const ClassSelector = ({ title, revalidatePathOnSuccess }: ClassSelectorProps) =
 		},
 	});
 
-	const onSubmit = async (data: ClassSelectorForm) => await action(data, revalidatePathOnSuccess ? window?.location?.pathname : undefined);
-
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
+			<form onSubmit={form.handleSubmit(action)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>{title ?? "Třída"}</CardTitle>
+						<CardTitle>Třída</CardTitle>
 						<CardDescription>Prosím, vyplňte třídu, do které chodíte</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -70,7 +63,7 @@ const ClassSelector = ({ title, revalidatePathOnSuccess }: ClassSelectorProps) =
 					<CardFooter>
 						<ServerActionButton
 							pending={pending}
-							onClick={form.handleSubmit(onSubmit)}>
+							onClick={form.handleSubmit(action)}>
 							Uložit
 						</ServerActionButton>
 					</CardFooter>

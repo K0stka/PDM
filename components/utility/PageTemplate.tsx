@@ -19,7 +19,7 @@ interface PageTemplateProps {
 const PageTemplate = ({ title, children, actions, footer }: PageTemplateProps) => {
 	return (
 		<div
-			className={cn("relative box-border grid min-h-full gap-5 md:h-dvh md:overflow-y-hidden md:p-10", {
+			className={cn("relative box-border grid min-h-full gap-5 md:h-dvh md:overflow-y-hidden md:p-10 max-w-[1000px] mx-auto", {
 				"grid-rows-[auto,1fr]": !!title && !footer,
 				"grid-rows-[auto,1fr,auto]": !!title && !!footer,
 				"grid-rows-[1fr,auto]": !title && !!footer,

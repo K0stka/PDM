@@ -7,12 +7,14 @@ export const configuration: AppConfiguration = {
 	appThemeColor: "#0062a3",
 	SRGHBranding: true,
 
-	allowEventInterestVoting: true,
+	collectInterest: true,
+	maxInterests: 2,
+	interestsCTA: "U až dvou přednášek máte možnost vyjádřit svůj předběžný (nezávazný) zájem. Tím nám pomůžete správně naplánovat kapacitu místností a přispějete plynulosti akce.",
 
 	collectAttendance: false,
 
-	openClaimsOn: new Date("2022-01-01T00:00:00Z"),
-	closeClaimsOn: new Date("2022-01-01T00:00:00Z"),
+	openClaimsOn: new Date("2025-01-15T00:00:00Z"),
+	closeClaimsOn: new Date("2025-01-20T00:00:00Z"),
 
 	validClasses: [
 		"I.A4",

@@ -4,7 +4,9 @@ export type AppConfiguration = Readonly<{
 	appDescription: string;
 	appThemeColor: string;
 	SRGHBranding: boolean;
-	allowEventInterestVoting: boolean;
+	collectInterest: boolean;
+	maxInterests: number | null;
+	interestsCTA: string | null;
 	collectAttendance: boolean;
 	openClaimsOn: Date;
 	closeClaimsOn: Date;
@@ -13,6 +15,7 @@ export type AppConfiguration = Readonly<{
 
 export interface UserPermissions {
 	isAttending: boolean;
+	isTeacher: boolean;
 	isPresenting: boolean;
 	isAdmin: boolean;
 }

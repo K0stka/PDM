@@ -5,18 +5,18 @@ export const addArchetypeSchema = z.object({
 	name: z
 		.string()
 		.min(1, {
-			message: "Název dílny je povinný",
+			message: "Název přednášky je povinný",
 		})
 		.max(255, {
-			message: "Název dílny může mít maximálně 255 znaků",
+			message: "Název přednášky může mít maximálně 255 znaků",
 		}),
 	description: z
 		.string()
 		.min(1, {
-			message: "Popis dílny je povinný",
+			message: "Popis přednášky je povinný",
 		})
 		.max(1023, {
-			message: "Popis dílny může mít maximálně 1023 znaků",
+			message: "Popis přednášky může mít maximálně 1023 znaků",
 		}),
 });
 

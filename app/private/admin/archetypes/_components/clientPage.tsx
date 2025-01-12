@@ -21,11 +21,11 @@ const EditArchetypesClientPage = ({ archetypes }: EditArchetypesClientPageProps)
 				<AddArchetypeDialog setOpen={setAddArchetypeOpen} />
 			</Dialog>
 			<PageTemplate
-				title="Správa dílen"
+				title="Správa přednášek"
 				actions={[
 					{
 						id: "add",
-						text: "Přidat dílnu",
+						text: "Přidat přednášku",
 						icon: <Plus />,
 						props: {
 							variant: "secondary",

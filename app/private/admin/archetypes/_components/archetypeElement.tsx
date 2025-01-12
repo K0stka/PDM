@@ -17,8 +17,8 @@ const AdminArchetypeElement = ({ archetype }: AdminArchetypeElementProps) => {
 			<CardHeader>
 				<CardTitle>{archetype.name}</CardTitle>
 			</CardHeader>
-			<CardContent>{archetype.description}</CardContent>
-			<CardFooter className="flex justify-between flex-wrap">
+			<CardContent className="whitespace-pre-line">{archetype.description}</CardContent>
+			<CardFooter className="flex justify-between flex-wrap gap-3">
 				<div className="flex gap-3">
 					<Badge className="bg-yellow-500 text-black">
 						<ThumbsUp />
@@ -31,7 +31,7 @@ const AdminArchetypeElement = ({ archetype }: AdminArchetypeElementProps) => {
 									variant="outline"
 									className="cursor-pointer">
 									<CalendarRange />
-									{archetype.events} {pluralHelper(archetype.events, "dílna", "dílny", "dílen")}
+									{archetype.events} {pluralHelper(archetype.events, "přednáška", "přednášky", "přednášek")}
 								</Badge>
 							</TooltipTrigger>
 							<TooltipContent>Upravit</TooltipContent>

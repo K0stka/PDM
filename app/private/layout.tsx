@@ -1,4 +1,3 @@
-import ClassSelector from "./shared/settings/_components/classSelector";
 import { NextLayout } from "@/lib/utilityTypes";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import SidebarPhoneToggle from "@/components/sidebar/SidebarPhoneToggle";
@@ -14,18 +13,7 @@ const Layout: NextLayout = async ({ children }) => {
 			<SidebarProvider>
 				<Sidebar />
 				<main className="h-dvh w-full overflow-hidden grid grid-rows-[1fr,auto] md:grid-rows-1">
-					<div className="overflow-auto">
-						{!user.isAttending || user.class ? (
-							children
-						) : (
-							<div className="size-full flex items-center justify-center">
-								<ClassSelector
-									title="Než budete pokračovat..."
-									revalidatePathOnSuccess
-								/>
-							</div>
-						)}
-					</div>
+					<div className="overflow-auto">{children}</div>
 					<SidebarPhoneToggle />
 				</main>
 			</SidebarProvider>

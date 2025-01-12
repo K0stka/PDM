@@ -1,4 +1,4 @@
-import { CalendarCog, CalendarRange, House, LibraryBig, LucideIcon, MapPinned, Presentation, SquareCheck, UserRoundCog } from "lucide-react";
+import { CalendarCog, CalendarRange, House, LibraryBig, LucideIcon, MapPinned, SquareCheck, UserRoundCog } from "lucide-react";
 
 import { Either } from "./utilityTypes";
 import { UserPermissions } from "./types";
@@ -8,12 +8,12 @@ export type PageInfo = {
 	path: string;
 	extendable?: true;
 	file: string;
-} & Either<{}, (Either<{ showInSidebar: true }, { showOnHomepage: true }> | { showInSidebar: true; showOnHomepage: true }) & { name: string; icon: LucideIcon; category: keyof typeof roleNames | "misc" }>;
+} & Either<object, (Either<{ showInSidebar: true }, { showOnHomepage: true }> | { showInSidebar: true; showOnHomepage: true }) & { name: string; icon: LucideIcon; category: keyof typeof roleNames | "misc" }>;
 
-export const getPages = ({ isAttending, isPresenting, isAdmin }: UserPermissions): PageInfo[] => {
+export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: UserPermissions): PageInfo[] => {
 	const pages: PageInfo[] = [];
 
-	if (!isAttending && !isPresenting && !isAdmin)
+	if (!isAttending && !isTeacher && !isPresenting && !isAdmin)
 		pages.push({
 			path: "/",
 			file: "/invalid-account",
@@ -40,16 +40,16 @@ export const getPages = ({ isAttending, isPresenting, isAdmin }: UserPermissions
 				category: "attending",
 			},
 			{
-				name: "Anotace dílen",
+				name: "Anotace přednášek",
 				path: "/workshops",
-				file: "/attending/workshops",
+				file: "/shared/workshops",
 				showInSidebar: true,
 				showOnHomepage: true,
 				icon: LibraryBig,
 				category: "attending",
 			},
 			{
-				name: "Volba dílen",
+				name: "Volba přednášek",
 				path: "/claims",
 				file: "/attending/claims",
 				showInSidebar: true,
@@ -58,6 +58,18 @@ export const getPages = ({ isAttending, isPresenting, isAdmin }: UserPermissions
 				category: "attending",
 			}
 		);
+
+	if (isTeacher)
+		if (!isAttending)
+			pages.push({
+				name: "Anotace přednášek",
+				path: "/workshops",
+				file: "/shared/workshops",
+				showInSidebar: true,
+				showOnHomepage: true,
+				icon: LibraryBig,
+				category: "teacher",
+			});
 
 	if (isAdmin)
 		pages.push(
@@ -71,7 +83,7 @@ export const getPages = ({ isAttending, isPresenting, isAdmin }: UserPermissions
 				category: "admin",
 			},
 			{
-				name: "Správa dílen",
+				name: "Správa přednášek",
 				path: "/workshops/edit",
 				file: "/admin/archetypes",
 				showInSidebar: true,
