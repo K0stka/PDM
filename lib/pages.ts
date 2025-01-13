@@ -30,15 +30,15 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 
 	if (isAttending)
 		pages.push(
-			{
-				name: "Kde mám teď být?",
-				path: "/attending",
-				file: "/attending/now",
-				showInSidebar: true,
-				showOnHomepage: true,
-				icon: MapPinned,
-				category: "attending",
-			},
+			// {
+			// 	name: "Kde mám teď být?",
+			// 	path: "/attending",
+			// 	file: "/attending/now",
+			// 	showInSidebar: true,
+			// 	showOnHomepage: true,
+			// 	icon: MapPinned,
+			// 	category: "attending",
+			// },
 			{
 				name: "Anotace přednášek",
 				path: "/workshops",
@@ -47,16 +47,16 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 				showOnHomepage: true,
 				icon: LibraryBig,
 				category: "attending",
-			},
-			{
-				name: "Volba přednášek",
-				path: "/claims",
-				file: "/attending/claims",
-				showInSidebar: true,
-				showOnHomepage: true,
-				icon: SquareCheck,
-				category: "attending",
 			}
+			// {
+			// 	name: "Volba přednášek",
+			// 	path: "/claims",
+			// 	file: "/attending/claims",
+			// 	showInSidebar: true,
+			// 	showOnHomepage: true,
+			// 	icon: SquareCheck,
+			// 	category: "attending",
+			// }
 		);
 
 	if (isTeacher)
