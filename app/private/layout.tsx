@@ -12,8 +12,8 @@ const Layout: NextLayout = async ({ children }) => {
 		<UserProvider user={user}>
 			<SidebarProvider>
 				<Sidebar />
-				<main className="h-dvh w-full overflow-hidden grid grid-rows-[1fr,auto] md:grid-rows-1">
-					<div className="overflow-auto">{children}</div>
+				<main className="h-dvh w-full overflow-hidden relative grid grid-rows-[1fr,auto] md:grid-rows-1">
+					<div className="overflow-y-auto">{children}</div>
 					<SidebarPhoneToggle />
 				</main>
 			</SidebarProvider>

@@ -23,6 +23,7 @@ export const archetypes = pgTable("archetypes", {
 	id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
 	name: varchar("name", { length: 255 }).notNull(),
 	description: varchar("description", { length: 2047 }).notNull(),
+	canceled: boolean("canceled").notNull().default(false),
 });
 
 export const blocks = pgTable("blocks", {
@@ -101,9 +102,11 @@ export const claims = pgTable(
 		block: integer("block")
 			.notNull()
 			.references(() => blocks.id),
+		priority: integer("priority").notNull(),
+		cancelled: boolean("cancelled").notNull().default(false),
 		timestamp: timestamp("timestamp").notNull(),
 	},
-	(table) => [index("claim_user_index").on(table.user), index("claim_archetype_index").on(table.archetype), index("claim_block_index").on(table.block)]
+	(table) => [index("claim_user_index").on(table.user), index("claim_archetype_index").on(table.archetype), index("claim_backup_archetype_index").on(table.archetype), index("claim_block_index").on(table.block)]
 );
 
 export const attendance = pgTable(

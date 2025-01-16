@@ -1,6 +1,8 @@
 import { ButtonProps } from "../ui/button";
 import { LucideIcon } from "lucide-react";
 import PageTemplateTitle from "./PageTemplateTitle";
+import Spinner from "./Spinner";
+import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 
 interface PageTemplateProps {
@@ -19,7 +21,7 @@ interface PageTemplateProps {
 const PageTemplate = ({ title, children, actions, footer }: PageTemplateProps) => {
 	return (
 		<div
-			className={cn("relative box-border grid min-h-full gap-5 md:h-dvh md:overflow-y-hidden md:p-10 max-w-[1000px] mx-auto", {
+			className={cn("relative box-border grid min-h-full gap-5 md:h-dvh md:overflow-y-hidden md:p-10 max-w-[min(1000px,100dvw)] mx-auto", {
 				"grid-rows-[auto,1fr]": !!title && !footer,
 				"grid-rows-[auto,1fr,auto]": !!title && !!footer,
 				"grid-rows-[1fr,auto]": !title && !!footer,
@@ -33,7 +35,9 @@ const PageTemplate = ({ title, children, actions, footer }: PageTemplateProps) =
 					/>
 				</h1>
 			)}
-			<div className="relative px-5 pb-5 md:h-full md:overflow-y-auto md:p-0">{children}</div>
+			<div className="relative px-5 pb-5 md:h-full overflow-x-hidden md:overflow-y-auto max-w-full md:p-0">
+				<Suspense fallback={<Spinner />}>{children}</Suspense>
+			</div>
 			{footer && <div>{footer}</div>}
 		</div>
 	);

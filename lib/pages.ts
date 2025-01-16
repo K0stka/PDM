@@ -1,7 +1,8 @@
-import { CalendarCog, CalendarRange, House, LibraryBig, LucideIcon, MapPinned, SquareCheck, UserRoundCog } from "lucide-react";
+import { CalendarCog, CalendarRange, ChartColumnBig, House, LibraryBig, LucideIcon, MapPinned, SquareCheck, UserRoundCog } from "lucide-react";
 
 import { Either } from "./utilityTypes";
 import { UserPermissions } from "./types";
+import { configuration } from "@/configuration/configuration";
 import { roleNames } from "@/configuration/roles";
 
 export type PageInfo = {
@@ -47,16 +48,16 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 				showOnHomepage: true,
 				icon: LibraryBig,
 				category: "attending",
+				// },
+				// {
+				// 	name: "Volba přednášek",
+				// 	path: "/claims",
+				// 	file: "/attending/claims",
+				// 	showInSidebar: true,
+				// 	showOnHomepage: true,
+				// 	icon: SquareCheck,
+				// 	category: "attending",
 			}
-			// {
-			// 	name: "Volba přednášek",
-			// 	path: "/claims",
-			// 	file: "/attending/claims",
-			// 	showInSidebar: true,
-			// 	showOnHomepage: true,
-			// 	icon: SquareCheck,
-			// 	category: "attending",
-			// }
 		);
 
 	if (isTeacher)
@@ -78,7 +79,7 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 				path: "/timetable",
 				file: "/admin/timetable",
 				showInSidebar: true,
-				showOnHomepage: true,
+				// showOnHomepage: true,
 				icon: CalendarRange,
 				category: "admin",
 			},
@@ -91,6 +92,19 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 				icon: CalendarCog,
 				category: "admin",
 			},
+			...(configuration.collectInterest
+				? [
+						{
+							name: "Průzkum zájmu",
+							path: "/interest",
+							file: "/admin/interest",
+							showInSidebar: true,
+							// showOnHomepage: true,
+							icon: ChartColumnBig,
+							category: "admin",
+						} as PageInfo,
+				  ]
+				: []),
 			{
 				name: "Správa uživatelů",
 				path: "/users",

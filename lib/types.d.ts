@@ -10,6 +10,7 @@ export type AppConfiguration = Readonly<{
 	collectAttendance: boolean;
 	openClaimsOn: Date;
 	closeClaimsOn: Date;
+	secondaryClaims: boolean;
 	validClasses: [string, ...string[]];
 }>;
 
@@ -40,6 +41,7 @@ export type Archetype = {
 	id: number;
 	name: string;
 	description: string;
+	canceled: boolean;
 };
 
 export type Block = {
@@ -78,6 +80,8 @@ export type Claim = {
 	user: User;
 	archetype: Archetype;
 	block: Block;
+	priority: boolean;
+	cancelled: boolean;
 	timestamp: Date;
 };
 

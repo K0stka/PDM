@@ -17,7 +17,7 @@ const AdminArchetypeElement = ({ archetype }: AdminArchetypeElementProps) => {
 			<CardHeader>
 				<CardTitle>{archetype.name}</CardTitle>
 			</CardHeader>
-			<CardContent className="whitespace-pre-line">{archetype.description}</CardContent>
+			<CardContent className="truncate max-h-[1em] mb-2">{archetype.description}</CardContent>
 			<CardFooter className="flex justify-between flex-wrap gap-3">
 				<div className="flex gap-3">
 					<Badge className="bg-yellow-500 text-black">

@@ -18,7 +18,7 @@ export function SidebarUser() {
 	const { isMobile, setOpenMobile } = useSidebar();
 
 	return (
-		<SidebarMenu className="rounded-2xl p-1 md:pr-2 md:rounded-sm transition-colors bg-secondary md:bg-transparent md:hover:bg-secondary">
+		<SidebarMenu className="rounded-2xl p-1 md:pl-0 md:rounded-sm transition-colors bg-secondary md:bg-transparent md:hover:bg-secondary">
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>

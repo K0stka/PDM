@@ -3,7 +3,9 @@ import { SquareCheck, SquareX } from "lucide-react";
 
 import ClassSelector from "./_components/classSelector";
 import { NextPage } from "next";
+import No from "@/components/icons/No";
 import PageTemplate from "@/components/utility/PageTemplate";
+import Yes from "@/components/icons/Yes";
 import { session } from "@/auth/session";
 
 const SettingsPage: NextPage = async () => {
@@ -21,29 +23,9 @@ const SettingsPage: NextPage = async () => {
 						<b>Jméno a příjmení:</b> <span>{user.name}</span>
 						<b>Mail:</b> <span>{user.email}</span>
 						<b>Účastník akce:</b>
-						{user.isAttending ? (
-							<span>
-								<SquareCheck className="bg-lime-500 text-white rounded size-5 mr-2" />
-								Ano
-							</span>
-						) : (
-							<span>
-								<SquareX className="bg-red-500 text-white rounded size-5 mr-2" />
-								Ne
-							</span>
-						)}
+						{user.isAttending ? <Yes withText /> : <No withText />}
 						<b>Prezentující:</b>
-						{user.isPresenting ? (
-							<span>
-								<SquareCheck className="bg-lime-500 text-white rounded size-5 mr-2" />
-								Ano
-							</span>
-						) : (
-							<span>
-								<SquareX className="bg-red-500 text-white rounded size-5 mr-2" />
-								Ne
-							</span>
-						)}
+						{user.isPresenting ? <Yes withText /> : <No withText />}
 					</CardContent>
 				</Card>
 				{user.isAttending && <ClassSelector />}

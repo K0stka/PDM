@@ -15,6 +15,7 @@ export const configuration: AppConfiguration = {
 
 	openClaimsOn: new Date("2025-01-15T00:00:00Z"),
 	closeClaimsOn: new Date("2025-01-20T00:00:00Z"),
+	secondaryClaims: true,
 
 	validClasses: [
 		"I.A4",
