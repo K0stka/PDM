@@ -13,8 +13,8 @@ export const configuration: AppConfiguration = {
 
 	collectAttendance: false,
 
-	openClaimsOn: new Date("2025-01-15T00:00:00Z"),
-	closeClaimsOn: new Date("2025-01-20T00:00:00Z"),
+	openClaimsOn: new Date("2025-01-20T00:00:00Z"),
+	closeClaimsOn: new Date("2025-01-21T00:00:00Z"),
 	secondaryClaims: true,
 
 	validClasses: [
