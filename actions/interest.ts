@@ -8,7 +8,7 @@ import { session, validateUser } from "@/auth/session";
 import { configuration } from "@/configuration/configuration";
 import { revalidatePath } from "next/cache";
 
-export const expressInterest = async (data: expressInterestSchema) => {
+export const expressInterest = async (unsafe: expressInterestSchema) => {
 	if (interestsActive() === false) return UserError("Projevování zájmu o přednášky není aktivní");
 
 	const user = await session();
@@ -18,20 +18,20 @@ export const expressInterest = async (data: expressInterestSchema) => {
 		throwError: true,
 	});
 
-	const [validated, error] = inlineCatch(() => expressInterestSchema.parse(data));
+	const [data, error] = inlineCatch(() => expressInterestSchema.parse(unsafe));
 
 	if (error) return UserError(error);
 
 	const exists = await db.query.interests.findFirst({
-		where: and(eq(interests.archetype, validated.archetypeId), eq(interests.user, user.id)),
+		where: and(eq(interests.archetype, data.archetypeId), eq(interests.user, user.id)),
 	});
 
-	if (!!exists === validated.isInterested) {
+	if (!!exists === data.isInterested) {
 		revalidatePath("/workshops");
 		return;
 	}
 
-	if (validated.isInterested) {
+	if (data.isInterested) {
 		if (configuration.maxInterests) {
 			const numberOfInterests = (await db.select({ count: count() }).from(interests).where(eq(interests.user, user.id)))[0].count;
 
@@ -39,10 +39,10 @@ export const expressInterest = async (data: expressInterestSchema) => {
 		}
 
 		await db.insert(interests).values({
-			archetype: validated.archetypeId,
+			archetype: data.archetypeId,
 			user: user.id,
 		});
-	} else await db.delete(interests).where(and(eq(interests.archetype, validated.archetypeId), eq(interests.user, user.id)));
+	} else await db.delete(interests).where(and(eq(interests.archetype, data.archetypeId), eq(interests.user, user.id)));
 
 	revalidatePath("/workshops");
 };

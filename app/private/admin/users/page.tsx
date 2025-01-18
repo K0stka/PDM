@@ -4,19 +4,26 @@ import { NextPage } from "next";
 import PageTemplate from "@/components/utility/PageTemplate";
 import { User } from "@/lib/types";
 import { UsersTable } from "./_components/table";
-import { columns } from "./_components/columns";
 
 const UsersPage: NextPage = async () => {
 	const users = (await db.query.users.findMany({
+		columns: {
+			id: true,
+			name: true,
+			email: true,
+			colors: true,
+			class: true,
+			isAttending: true,
+			isTeacher: true,
+			isPresenting: true,
+			isAdmin: true,
+		},
 		orderBy: asc(usersTable.name),
 	})) as User[];
 
 	return (
 		<PageTemplate title="Správa uživatelů">
-			<UsersTable
-				columns={columns}
-				data={users}
-			/>
+			<UsersTable data={users} />
 		</PageTemplate>
 	);
 };

@@ -62,7 +62,7 @@ export function ComboBox({ values, value, onChange, placeholder, className }: Co
 			<PopoverTrigger asChild>
 				<Button
 					variant="outline"
-					className="w-[150px] justify-start">
+					className={cn("w-[150px] justify-start", className)}>
 					{value ?? placeholder ?? "Prosím vyberte možnost..."}
 				</Button>
 			</PopoverTrigger>

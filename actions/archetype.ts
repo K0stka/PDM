@@ -7,7 +7,7 @@ import { session, validateUser } from "@/auth/session";
 
 import { revalidatePath } from "next/cache";
 
-export const addArchetype = async (data: addArchetypeSchema) => {
+export const addArchetype = async (unsafe: addArchetypeSchema) => {
 	const user = await session();
 
 	validateUser(user, {
@@ -15,7 +15,7 @@ export const addArchetype = async (data: addArchetypeSchema) => {
 		throwError: true,
 	});
 
-	const [archetype, error] = inlineCatch(() => addArchetypeSchema.parse(data));
+	const [archetype, error] = inlineCatch(() => addArchetypeSchema.parse(unsafe));
 
 	if (error) return UserError(error);
 
@@ -24,7 +24,7 @@ export const addArchetype = async (data: addArchetypeSchema) => {
 	revalidatePath("/workshops/edit");
 };
 
-export const editArchetype = async (data: editArchetypeSchema) => {
+export const editArchetype = async (unsafe: editArchetypeSchema) => {
 	const user = await session();
 
 	validateUser(user, {
@@ -32,7 +32,7 @@ export const editArchetype = async (data: editArchetypeSchema) => {
 		throwError: true,
 	});
 
-	const [archetype, error] = inlineCatch(() => editArchetypeSchema.parse(data));
+	const [archetype, error] = inlineCatch(() => editArchetypeSchema.parse(unsafe));
 
 	if (error) return UserError(error);
 
