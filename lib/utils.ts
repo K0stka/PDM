@@ -3,6 +3,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { twMerge } from "tailwind-merge";
 import { UserErrorType } from "./utilityTypes";
 import { ZodError } from "zod";
+import { format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -30,3 +31,9 @@ export const UnauthorizedError = (): UserErrorType => UserError("K proveden√≠ t√
 export const getUserError = <T>(data: UserErrorType | T): [T, null] | [null, UserErrorType] => ((data as UserErrorType | any)?.type === "error" ? [null, data as UserErrorType] : [data as T, null]);
 
 export const pluralHelper = (count: number, singular: string, TwoToFile: string, Many: string | null = null) => (count === 1 ? singular : (count >= 2 && count <= 4) || !Many ? TwoToFile : Many);
+
+export const printDate = (date: Date) => format(date, "d. M. yyyy");
+
+export const printTime = (date: Date) => format(date, "H:mm");
+
+export const printDateTime = (date: Date) => format(date, "d. M. yyyy H:mm");

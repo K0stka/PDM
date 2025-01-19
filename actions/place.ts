@@ -2,9 +2,11 @@
 
 import { UnauthorizedError, UserError, inlineCatch, pluralHelper } from "@/lib/utils";
 import { addPlaceSchema, editPlaceSchema } from "@/validation/place";
-import { count, db, eq, events, places } from "@/db";
+import { blocks, count, db, eq, events, getTableColumns, places } from "@/db";
 import { session, validateUser } from "@/auth/session";
 
+import { Place } from "@/lib/types";
+import { UserErrorType } from "@/lib/utilityTypes";
 import { revalidatePath } from "next/cache";
 
 export const addPlace = async (unsafe: addPlaceSchema) => {
@@ -71,4 +73,25 @@ export const deletePlace = async (id: number) => {
 	await db.delete(places).where(eq(places.id, id));
 
 	revalidatePath("/admin/places");
+};
+
+export const getPossiblePlacesForEvent = async (blockId: number): Promise<UserErrorType | Place[]> => {
+	const user = await session();
+
+	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+	const block = await db.query.blocks.findFirst({
+		where: eq(blocks.id, blockId),
+	});
+
+	if (!block) return UserError("Neplatné ID bloku");
+
+	return await db
+		.select({
+			...getTableColumns(places),
+		})
+		.from(places)
+		.where(eq(count(events.id), 0))
+		.leftJoin(events, eq(places.id, events.place))
+		.groupBy(places.id);
 };

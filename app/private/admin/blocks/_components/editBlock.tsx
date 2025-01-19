@@ -3,41 +3,41 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-import { Input } from "@/components/ui/input";
-import { Place } from "@/lib/types";
+import { Block } from "@/lib/types";
+import { DateTimePicker } from "@/components/ui/dateTimePicker";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { SetState } from "@/lib/utilityTypes";
-import { editPlace } from "@/actions/place";
-import { editPlaceSchema } from "@/validation/place";
+import { editBlock } from "@/actions/block";
+import { editBlockSchema } from "@/validation/block";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useServerAction } from "@/hooks/use-server-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-interface EditPlaceProps {
+interface EditBlockProps {
 	open: boolean;
 	onOpenChange: SetState<boolean>;
-	place: Place;
+	block: Block;
 }
 
-const EditPlace = ({ open, onOpenChange, place }: EditPlaceProps) => {
+const EditBlock = ({ open, onOpenChange, block }: EditBlockProps) => {
 	const { action, pending } = useServerAction({
-		action: editPlace,
+		action: editBlock,
 		successToast: "Změny byly uloženy úspěšně",
 		errorToastTitle: "Změny se nepodařilo uložit",
 		loadingToast: "Ukládám změny",
 		onSuccess: () => onOpenChange(false),
 	});
 
-	const form = useForm<editPlaceSchema>({
-		resolver: zodResolver(editPlaceSchema),
+	const form = useForm<editBlockSchema>({
+		resolver: zodResolver(editBlockSchema),
 	});
 
 	useEffect(() => {
-		form.reset(place);
-	}, [place]);
+		form.reset(block);
+	}, [block]);
 
-	const onSubmit = async (data: editPlaceSchema) => {
+	const onSubmit = async (data: editBlockSchema) => {
 		await action(data);
 
 		form.reset();
@@ -49,21 +49,46 @@ const EditPlace = ({ open, onOpenChange, place }: EditPlaceProps) => {
 			onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Upravit místo</DialogTitle>
+					<DialogTitle>Upravit blok</DialogTitle>
 					<DialogDescription />
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<FormField
 							control={form.control}
-							name="name"
+							name="from"
 							render={({ field }) => (
-								<FormItem className="my-4">
-									<FormLabel>Název</FormLabel>
+								<FormItem className="my-4 grid grid-cols-[auto,1fr] items-center gap-2 space-y-0">
+									<FormLabel>Od</FormLabel>
 									<FormControl>
-										<Input {...field} />
+										<DateTimePicker
+											value={field.value}
+											onChange={field.onChange}
+											granularity="minute"
+											yearRange={1}
+											className="w-full"
+										/>
 									</FormControl>
-									<FormMessage />
+									<FormMessage className="col-span-2" />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="to"
+							render={({ field }) => (
+								<FormItem className="my-4 grid grid-cols-[auto,1fr] items-center gap-2 space-y-0">
+									<FormLabel>Do</FormLabel>
+									<FormControl>
+										<DateTimePicker
+											value={field.value}
+											onChange={field.onChange}
+											granularity="minute"
+											yearRange={1}
+											className="w-full"
+										/>
+									</FormControl>
+									<FormMessage className="col-span-2" />
 								</FormItem>
 							)}
 						/>
@@ -81,4 +106,4 @@ const EditPlace = ({ open, onOpenChange, place }: EditPlaceProps) => {
 	);
 };
 
-export default EditPlace;
+export default EditBlock;

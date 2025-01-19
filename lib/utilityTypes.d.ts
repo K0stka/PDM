@@ -23,5 +23,3 @@ export interface UserErrorType {
 	type: "error";
 	message: string;
 }
-
-export type ServerActionResponse<T> = Either<UserErrorType, T>;

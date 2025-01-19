@@ -616,7 +616,10 @@ type DateTimePickerRef = {
 } & Omit<HTMLButtonElement, "value">;
 
 const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePickerProps>(
-	({ locale = cs, defaultPopupValue = new Date(new Date().setHours(0, 0, 0, 0)), value, onChange, hourCycle = 24, yearRange = 50, disabled = false, displayFormat, granularity = "second", placeholder = "Pick a date", className, ...props }, ref) => {
+	(
+		{ locale = cs, defaultPopupValue = new Date(new Date().setHours(0, 0, 0, 0)), value, onChange, hourCycle = 24, yearRange = 50, disabled = false, displayFormat, granularity = "second", placeholder = "Zvolte datum", className, ...props },
+		ref
+	) => {
 		const [month, setMonth] = React.useState<Date>(value ?? defaultPopupValue);
 		const buttonRef = useRef<HTMLButtonElement>(null);
 		const [displayDate, setDisplayDate] = React.useState<Date | undefined>(value ?? undefined);

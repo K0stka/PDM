@@ -8,6 +8,7 @@ import { Archetype } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import EditEvent from "./editEvent";
 import { Plus } from "lucide-react";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +25,7 @@ interface EditEventProps {
 
 const EditEvents = ({ archetype, open, onOpenChange }: EditEventProps) => {
 	const [events, setEvents] = useState<EditEventDetails[] | null>(null);
+	const [createNew, setCreateNew] = useState(false);
 
 	useEffect(() => {
 		setEvents(null);
@@ -39,18 +41,6 @@ const EditEvents = ({ archetype, open, onOpenChange }: EditEventProps) => {
 		});
 	}, [archetype]);
 
-	const { action, pending } = useServerAction({
-		action: editArchetype,
-		loadingToast: "Ukládání změn...",
-		successToast: "Změny byly úspěšně uloženy",
-		errorToastTitle: "Při ukládání změn došlo k chybě",
-		onSuccess: () => onOpenChange(false),
-	});
-
-	const onSubmit = async () => {
-		// await action(validated);
-	};
-
 	return (
 		<Dialog
 			open={open}
@@ -60,10 +50,16 @@ const EditEvents = ({ archetype, open, onOpenChange }: EditEventProps) => {
 					<DialogTitle>Upravit přednášky</DialogTitle>
 					<DialogDescription />
 				</DialogHeader>
-				{archetype.numberOfEvents === 0 ? (
+				{createNew && <EditEvent cancelCreateNew={() => setCreateNew(false)} />}
+				{archetype.numberOfEvents === 0 && !createNew ? (
 					<div className="text-sm text-muted-foreground text-center my-8">Ještě nebyly vytvořeny žádné přednášky</div>
 				) : events ? (
-					events.map((event) => <Card key={event.id}></Card>)
+					events.map((event) => (
+						<EditEvent
+							key={event.id}
+							event={event}
+						/>
+					))
 				) : (
 					[...Array(archetype.numberOfEvents).keys()].map((id) => (
 						<Skeleton
@@ -73,7 +69,7 @@ const EditEvents = ({ archetype, open, onOpenChange }: EditEventProps) => {
 					))
 				)}
 				<DialogFooter>
-					<Button>
+					<Button onClick={() => setCreateNew(true)}>
 						<Plus /> Přidat přednášku
 					</Button>
 				</DialogFooter>
