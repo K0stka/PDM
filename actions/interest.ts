@@ -13,7 +13,7 @@ export const expressInterest = async (unsafe: expressInterestSchema) => {
 
 	const user = await session();
 
-	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+	if (!validateUser(user, { isAttending: true })) return UnauthorizedError();
 
 	const [data, error] = inlineCatch(() => expressInterestSchema.parse(unsafe));
 
