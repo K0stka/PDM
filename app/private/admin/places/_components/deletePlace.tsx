@@ -9,33 +9,36 @@ import { toast } from "sonner";
 import { useServerAction } from "@/hooks/use-server-action";
 
 interface DeletePlaceButtonProps {
-	place: Place & { events: any[] };
+    place: Place & { events: any[] };
 }
 
 const DeletePlaceButton = ({ place }: DeletePlaceButtonProps) => {
-	const { action, pending } = useServerAction({
-		action: deletePlace,
-		successToast: "Místo bylo úspěšně odstraněno",
-		errorToastTitle: "Místo se nepodařilo odstranit",
-		loadingToast: "Odstraňuji místo",
-	});
+    const { action, pending } = useServerAction({
+        action: deletePlace,
+        successToast: "Místo bylo úspěšně odstraněno",
+        errorToastTitle: "Místo se nepodařilo odstranit",
+        loadingToast: "Odstraňuji místo",
+    });
 
-	const handleDelete = async () => {
-		if (place.events.length > 0) return toast.error(`Místo nelze odstranit, protože se zde ${pluralHelper(place.events.length, "koná", "konají")} ${place.events.length} ${pluralHelper(place.events.length, "událost", "události", "událostí")}`);
+    const handleDelete = async () => {
+        if (place.events.length > 0)
+            return toast.error(
+                `Místo nelze odstranit, protože se zde ${pluralHelper(place.events.length, "koná", "konají")} ${place.events.length} ${pluralHelper(place.events.length, "událost", "události", "událostí")}`,
+            );
 
-		await action(place.id);
-	};
+        await action(place.id);
+    };
 
-	return (
-		<ServerActionButton
-			pending={pending}
-			variant={place.events.length > 0 ? "secondary" : "destructive"}
-			size="sm"
-			onClick={handleDelete}>
-			<Trash2 />
-			Odstranit
-		</ServerActionButton>
-	);
+    return (
+        <ServerActionButton
+            pending={pending}
+            variant={place.events.length > 0 ? "secondary" : "destructive"}
+            size="icon"
+            onClick={handleDelete}
+        >
+            <Trash2 />
+        </ServerActionButton>
+    );
 };
 
 export default DeletePlaceButton;

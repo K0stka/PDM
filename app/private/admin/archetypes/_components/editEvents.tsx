@@ -1,81 +1,109 @@
 "use client";
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EditEventDetails, getArchetypeEvents } from "@/actions/events";
+import { Archetype, Block } from "@/lib/types";
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 
-import { Archetype } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import EditEvent from "./editEvent";
 import { Plus } from "lucide-react";
-import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { editArchetype } from "@/actions/archetype";
-import { getUserError } from "@/lib/utils";
+import { catchUserError } from "@/lib/utils";
+import { fetchWithServerAction } from "@/hooks/use-server-action";
+import { getArchetypeEvents } from "@/actions/events";
 import { toast } from "sonner";
-import { useServerAction } from "@/hooks/use-server-action";
 
 interface EditEventProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	archetype: { id: Archetype["id"]; numberOfEvents: number };
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    archetype: { id: Archetype["id"]; numberOfEvents: number };
+    blocks: Block[];
 }
 
-const EditEvents = ({ archetype, open, onOpenChange }: EditEventProps) => {
-	const [events, setEvents] = useState<EditEventDetails[] | null>(null);
-	const [createNew, setCreateNew] = useState(false);
+const EditEvents = ({
+    archetype,
+    open,
+    onOpenChange,
+    blocks,
+}: EditEventProps) => {
+    const [createNew, setCreateNew] = useState(false);
+    const {
+        data: events,
+        returningInitial: updatingEvents,
+        refresh: updateEvents,
+    } = fetchWithServerAction({
+        action: async (archetypeId: Archetype["id"]) => {
+            const response = await getArchetypeEvents(archetypeId);
 
-	useEffect(() => {
-		setEvents(null);
+            const [events, error] = catchUserError(response);
 
-		getArchetypeEvents(archetype.id).then((result) => {
-			const [events, message] = getUserError(result);
+            if (error) {
+                toast.error("Nepodařilo se načíst přednášky", {
+                    description: error.message,
+                });
 
-			if (message)
-				toast.error("Nastala chyba", {
-					description: message.message,
-				});
-			else setEvents(events);
-		});
-	}, [archetype]);
+                return [];
+            }
 
-	return (
-		<Dialog
-			open={open}
-			onOpenChange={onOpenChange}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Upravit přednášky</DialogTitle>
-					<DialogDescription />
-				</DialogHeader>
-				{createNew && <EditEvent cancelCreateNew={() => setCreateNew(false)} />}
-				{archetype.numberOfEvents === 0 && !createNew ? (
-					<div className="text-sm text-muted-foreground text-center my-8">Ještě nebyly vytvořeny žádné přednášky</div>
-				) : events ? (
-					events.map((event) => (
-						<EditEvent
-							key={event.id}
-							event={event}
-						/>
-					))
-				) : (
-					[...Array(archetype.numberOfEvents).keys()].map((id) => (
-						<Skeleton
-							className="h-20 rounded"
-							key={id}
-						/>
-					))
-				)}
-				<DialogFooter>
-					<Button onClick={() => setCreateNew(true)}>
-						<Plus /> Přidat přednášku
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	);
+            return events;
+        },
+        initial: [],
+        initialArgs: [archetype.id],
+    });
+
+    useEffect(() => {
+        updateEvents(archetype.id);
+    }, [archetype]);
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-dvh overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Upravit přednášky</DialogTitle>
+                    <DialogDescription />
+                </DialogHeader>
+                {createNew && (
+                    <EditEvent
+                        archetypeId={archetype.id}
+                        blocks={blocks}
+                        cancelCreateNew={() => setCreateNew(false)}
+                        onSave={() => updateEvents(archetype.id)}
+                    />
+                )}
+                {archetype.numberOfEvents === 0 && !createNew ? (
+                    <div className="my-8 text-center text-sm text-muted-foreground">
+                        Ještě nebyly vytvořeny žádné přednášky
+                    </div>
+                ) : !updatingEvents ? (
+                    events.map((event) => (
+                        <EditEvent
+                            archetypeId={archetype.id}
+                            blocks={blocks}
+                            key={event.id}
+                            event={event}
+                            onSave={() => updateEvents(archetype.id)}
+                        />
+                    ))
+                ) : (
+                    [...Array(archetype.numberOfEvents).keys()].map((id) => (
+                        <Skeleton className="h-20 rounded" key={id} />
+                    ))
+                )}
+                <DialogFooter>
+                    <Button onClick={() => setCreateNew(true)}>
+                        <Plus /> Přidat přednášku
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
 export default EditEvents;

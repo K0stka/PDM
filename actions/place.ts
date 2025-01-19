@@ -86,12 +86,17 @@ export const getPossiblePlacesForEvent = async (blockId: number): Promise<UserEr
 
 	if (!block) return UserError("Neplatné ID bloku");
 
-	return await db
-		.select({
-			...getTableColumns(places),
+	return (
+		await db.query.places.findMany({
+			with: {
+				events: {
+					columns: {
+						id: true,
+					},
+					where: eq(events.block, blockId),
+					limit: 1,
+				},
+			},
 		})
-		.from(places)
-		.where(eq(count(events.id), 0))
-		.leftJoin(events, eq(places.id, events.place))
-		.groupBy(places.id);
+	).filter((place) => place.events.length === 0);
 };

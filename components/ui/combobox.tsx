@@ -27,6 +27,8 @@ export function ComboBox({ values, value, onChange, placeholder, className }: Co
 	const isMobile = useIsMobile();
 	const [open, setOpen] = useState(false);
 
+	const label = values.find((v) => v.value === value)?.label;
+
 	if (isMobile)
 		return (
 			<Drawer
@@ -36,7 +38,7 @@ export function ComboBox({ values, value, onChange, placeholder, className }: Co
 					<Button
 						variant="outline"
 						className={cn("w-[150px] justify-start", className)}>
-						{value ?? placeholder ?? "Prosím vyberte možnost..."}
+						{label ?? placeholder ?? "Prosím vyberte možnost..."}
 					</Button>
 				</DrawerTrigger>
 				<DrawerContent>
@@ -63,11 +65,11 @@ export function ComboBox({ values, value, onChange, placeholder, className }: Co
 				<Button
 					variant="outline"
 					className={cn("w-[150px] justify-start", className)}>
-					{value ?? placeholder ?? "Prosím vyberte možnost..."}
+					{label ?? placeholder ?? "Prosím vyberte možnost..."}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				className="w-[200px] p-0"
+				className="p-0"
 				align="start">
 				<ValuesList
 					values={values}

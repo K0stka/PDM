@@ -4,7 +4,7 @@ export const configuration: AppConfiguration = {
 	appName: "Přednáškový den",
 	appShortName: "Přednáškový den",
 	appDescription: "Aplikace SRGH pro usnadnění organizace Přednáškového dne",
-	appThemeColor: "#0062a3",
+	appThemeColor: "#001c2e",
 	SRGHBranding: true,
 
 	collectInterest: true,

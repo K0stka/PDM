@@ -1,4 +1,4 @@
-import { archetypes as archetypesTable, count, db, eq, events, getTableColumns, interests } from "@/db";
+import { archetypes as archetypesTable, asc, blocks as blocksTable, count, db, eq, events, getTableColumns, interests } from "@/db";
 
 import EditArchetypesClientPage from "./_components/clientPage";
 import { NextPage } from "next";
@@ -16,7 +16,16 @@ const EditArchetypesPage: NextPage = async () => {
 		.groupBy(archetypesTable.id)
 		.orderBy(archetypesTable.name);
 
-	return <EditArchetypesClientPage archetypes={archetypes} />;
+	const blocks = await db.query.blocks.findMany({
+		orderBy: asc(blocksTable.from),
+	});
+
+	return (
+		<EditArchetypesClientPage
+			archetypes={archetypes}
+			blocks={blocks}
+		/>
+	);
 };
 
 export default EditArchetypesPage;
