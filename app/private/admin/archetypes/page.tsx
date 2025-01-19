@@ -1,6 +1,5 @@
 import { archetypes as archetypesTable, count, db, eq, events, getTableColumns, interests } from "@/db";
 
-import AdminArchetypeElement from "./_components/archetypeElement";
 import EditArchetypesClientPage from "./_components/clientPage";
 import { NextPage } from "next";
 
@@ -17,16 +16,7 @@ const EditArchetypesPage: NextPage = async () => {
 		.groupBy(archetypesTable.id)
 		.orderBy(archetypesTable.name);
 
-	return (
-		<EditArchetypesClientPage
-			archetypes={archetypes.map((archetype) => (
-				<AdminArchetypeElement
-					key={archetype.id}
-					archetype={archetype}
-				/>
-			))}
-		/>
-	);
+	return <EditArchetypesClientPage archetypes={archetypes} />;
 };
 
 export default EditArchetypesPage;

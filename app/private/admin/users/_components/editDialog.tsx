@@ -1,10 +1,9 @@
 "use client";
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 import { ComboBox } from "@/components/ui/combobox";
-import { DialogDescription } from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { SetState } from "@/lib/utilityTypes";
@@ -32,6 +31,7 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
 		successToast: "Uživatel byl upraven úspěšně",
 		errorToastTitle: "Uživatele se nepodařilo upravit",
 		loadingToast: "Upravuji uživatele",
+		onSuccess: () => onOpenChange(false),
 	});
 
 	const form = useForm<editUserSchema>({
@@ -58,7 +58,20 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
 	return (
 		<Dialog
 			open={open}
-			onOpenChange={onOpenChange}>
+			onOpenChange={(isOpen) => {
+				form.reset({
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					class: user.class ?? undefined,
+					isAttending: user.isAttending,
+					isTeacher: user.isTeacher,
+					isPresenting: user.isPresenting,
+					isAdmin: user.isAdmin,
+				});
+
+				onOpenChange(isOpen);
+			}}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Upravit uživatele</DialogTitle>

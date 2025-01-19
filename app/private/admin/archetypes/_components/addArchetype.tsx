@@ -1,6 +1,6 @@
 "use client";
 
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { AutosizeTextarea } from "@/components/ui/autosizeTextarea";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 		<DialogContent>
 			<DialogHeader>
 				<DialogTitle>Přidat přednášku</DialogTitle>
+				<DialogDescription />
 			</DialogHeader>
 			<div className="flex flex-col space-y-2">
 				<Label htmlFor="name">Název</Label>

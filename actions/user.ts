@@ -1,6 +1,6 @@
 "use server";
 
-import { UserError, inlineCatch } from "@/lib/utils";
+import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import { db, eq, users } from "@/db";
 import { session, validateUser } from "@/auth/session";
 
@@ -10,10 +10,7 @@ import { revalidatePath } from "next/cache";
 export const editUser = async (unsafe: editUserSchema) => {
 	const user = await session();
 
-	validateUser(user, {
-		isAdmin: true,
-		throwError: true,
-	});
+	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
 	const [date, error] = inlineCatch(() => editUserSchema.parse(unsafe));
 

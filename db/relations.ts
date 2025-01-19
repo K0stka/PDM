@@ -12,6 +12,7 @@ export const userRelations = relations(users, ({ many }) => ({
 export const archetypeRelations = relations(archetypes, ({ many }) => ({
 	interests: many(interests),
 	claims: many(claims),
+	events: many(events),
 }));
 
 export const blockRelations = relations(blocks, ({ many }) => ({

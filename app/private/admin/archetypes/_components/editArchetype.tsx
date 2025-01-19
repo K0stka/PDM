@@ -1,13 +1,13 @@
 "use client";
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
 
 import { Archetype } from "@/lib/types";
 import { AutosizeTextarea } from "@/components/ui/autosizeTextarea";
-import { Button } from "@/components/ui/button";
+import { DialogDescription } from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil } from "lucide-react";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { ZodError } from "zod";
 import { editArchetype } from "@/actions/archetype";
@@ -15,23 +15,31 @@ import { editArchetypeSchema } from "@/validation/archetype";
 import { inlineCatch } from "@/lib/utils";
 import { toast } from "sonner";
 import { useServerAction } from "@/hooks/use-server-action";
-import { useState } from "react";
 
 interface EditArchetypeProps {
-	archetype: Archetype;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	archetype: Archetype & {
+		interested: number;
+		events: number;
+	};
 }
 
-const EditArchetype = ({ archetype }: EditArchetypeProps) => {
-	const [open, setOpen] = useState(false);
-	const [name, setName] = useState(archetype.name);
-	const [description, setDescription] = useState(archetype.description);
+const EditArchetype = ({ archetype, open, onOpenChange }: EditArchetypeProps) => {
+	const [name, setName] = useState("");
+	const [description, setDescription] = useState("");
+
+	useEffect(() => {
+		setName(archetype.name);
+		setDescription(archetype.description);
+	}, [archetype]);
 
 	const { action, pending } = useServerAction({
 		action: editArchetype,
 		loadingToast: "Ukládání změn...",
 		successToast: "Změny byly úspěšně uloženy",
 		errorToastTitle: "Při ukládání změn došlo k chybě",
-		onSuccess: () => setOpen(false),
+		onSuccess: () => onOpenChange(false),
 	});
 
 	const onSubmit = async () => {
@@ -45,27 +53,14 @@ const EditArchetype = ({ archetype }: EditArchetypeProps) => {
 		await action(validated);
 	};
 
-	const onReset = () => {
-		setName(archetype.name);
-		setDescription(archetype.description);
-	};
-
 	return (
 		<Dialog
 			open={open}
-			onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<Button
-					onClick={onReset}
-					variant="outline"
-					size="sm">
-					<Pencil />
-					Upravit
-				</Button>
-			</DialogTrigger>
+			onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Upravit přednášku</DialogTitle>
+					<DialogDescription />
 				</DialogHeader>
 				<div className="flex flex-col space-y-2">
 					<Label htmlFor="name">Název</Label>

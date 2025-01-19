@@ -93,7 +93,17 @@ export const fetchWithServerAction: FetchWithServerAction = ({ action, initial, 
 		setUpdating(true);
 
 		await action()
-			.then(setData)
+			.then((result) => {
+				if (result?.type === "error") {
+					toast.error("Nastala chyba", {
+						description: result.message,
+					});
+
+					return true;
+				}
+
+				setData(result);
+			})
 			.catch(console.error)
 			.finally(() => setUpdating(false));
 	};

@@ -1,4 +1,4 @@
-import { CalendarCog, CalendarRange, ChartColumnBig, House, LibraryBig, LucideIcon, MapPinned, SquareCheck, UserRoundCog } from "lucide-react";
+import { CalendarCog, CalendarRange, ChartColumnBig, House, LibraryBig, LucideIcon, MapPin, MapPinned, SquareCheck, UserRoundCog } from "lucide-react";
 
 import { Either } from "./utilityTypes";
 import { UserPermissions } from "./types";
@@ -74,15 +74,15 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 
 	if (isAdmin)
 		pages.push(
-			{
-				name: "Rozvrh",
-				path: "/timetable",
-				file: "/admin/timetable",
-				showInSidebar: true,
-				// showOnHomepage: true,
-				icon: CalendarRange,
-				category: "admin",
-			},
+			// {
+			// 	name: "Rozvrh",
+			// 	path: "/timetable",
+			// 	file: "/admin/timetable",
+			// 	showInSidebar: true,
+			// 	// showOnHomepage: true,
+			// 	icon: CalendarRange,
+			// 	category: "admin",
+			// },
 			{
 				name: "Správa přednášek",
 				path: "/workshops/edit",
@@ -112,6 +112,14 @@ export const getPages = ({ isAttending, isTeacher, isPresenting, isAdmin }: User
 				showInSidebar: true,
 				showOnHomepage: true,
 				icon: UserRoundCog,
+				category: "admin",
+			},
+			{
+				name: "Správa míst",
+				path: "/places",
+				file: "/admin/places",
+				showInSidebar: true,
+				icon: MapPin,
 				category: "admin",
 			}
 		);

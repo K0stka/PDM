@@ -25,4 +25,8 @@ export const UserError = (message: string | Error | ZodError): UserErrorType => 
 	message: message instanceof ZodError ? message.errors[0].message : message instanceof Error ? message.message : message,
 });
 
-export const pluralHelper = (count: number, singular: string, TwoToFile: string, Many: string) => (count === 1 ? singular : count >= 2 && count <= 4 ? TwoToFile : Many);
+export const UnauthorizedError = (): UserErrorType => UserError("K provedení této akce nemáte dostatečná oprávnění");
+
+export const getUserError = <T>(data: UserErrorType | T): [T, null] | [null, UserErrorType] => ((data as UserErrorType | any)?.type === "error" ? [null, data as UserErrorType] : [data as T, null]);
+
+export const pluralHelper = (count: number, singular: string, TwoToFile: string, Many: string | null = null) => (count === 1 ? singular : (count >= 2 && count <= 4) || !Many ? TwoToFile : Many);

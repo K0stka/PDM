@@ -1,6 +1,6 @@
 "use server";
 
-import { UserError, inlineCatch } from "@/lib/utils";
+import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import { addArchetypeSchema, editArchetypeSchema } from "@/validation/archetype";
 import { archetypes, db, eq } from "@/db";
 import { session, validateUser } from "@/auth/session";
@@ -10,10 +10,7 @@ import { revalidatePath } from "next/cache";
 export const addArchetype = async (unsafe: addArchetypeSchema) => {
 	const user = await session();
 
-	validateUser(user, {
-		isAdmin: true,
-		throwError: true,
-	});
+	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
 	const [archetype, error] = inlineCatch(() => addArchetypeSchema.parse(unsafe));
 
@@ -27,10 +24,7 @@ export const addArchetype = async (unsafe: addArchetypeSchema) => {
 export const editArchetype = async (unsafe: editArchetypeSchema) => {
 	const user = await session();
 
-	validateUser(user, {
-		isAdmin: true,
-		throwError: true,
-	});
+	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
 	const [archetype, error] = inlineCatch(() => editArchetypeSchema.parse(unsafe));
 

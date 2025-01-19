@@ -1,6 +1,6 @@
 "use server";
 
-import { UserError, inlineCatch, pluralHelper } from "@/lib/utils";
+import { UnauthorizedError, UserError, inlineCatch, pluralHelper } from "@/lib/utils";
 import { and, count, db, eq, interests } from "@/db";
 import { expressInterestSchema, interestsActive } from "@/validation/interest";
 import { session, validateUser } from "@/auth/session";
@@ -13,10 +13,7 @@ export const expressInterest = async (unsafe: expressInterestSchema) => {
 
 	const user = await session();
 
-	validateUser(user, {
-		isAttending: true,
-		throwError: true,
-	});
+	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
 	const [data, error] = inlineCatch(() => expressInterestSchema.parse(unsafe));
 

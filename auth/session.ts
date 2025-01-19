@@ -44,24 +44,17 @@ export const validateSession = (user: User, sessionUser: Session): boolean =>
 	user.isAttending === sessionUser.isAttending && user.isTeacher === sessionUser.isTeacher && user.isPresenting === sessionUser.isPresenting && user.isAdmin === sessionUser.isAdmin;
 
 type ValidateUserOptions = {
-	throwError?: true;
 	isAttending?: true;
 	isPresenting?: true;
 	isAdmin?: true;
 	classSet?: true;
 };
 
-export const validateUser = (user: User, { throwError, isAttending, isPresenting, isAdmin, classSet }: ValidateUserOptions): boolean => {
-	const valid = (() => {
-		if (isAttending && !user.isAttending) return false;
-		if (isPresenting && !user.isPresenting) return false;
-		if (isAdmin && !user.isAdmin) return false;
-		if (classSet && !user.class) return false;
+export const validateUser = (user: User, { isAttending, isPresenting, isAdmin, classSet }: ValidateUserOptions): boolean => {
+	if (isAttending && !user.isAttending) return false;
+	if (isPresenting && !user.isPresenting) return false;
+	if (isAdmin && !user.isAdmin) return false;
+	if (classSet && !user.class) return false;
 
-		return true;
-	})();
-
-	if (throwError && !valid) throw new Error("You are not authorized to perform this action");
-
-	return valid;
+	return true;
 };
