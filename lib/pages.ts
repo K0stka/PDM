@@ -76,15 +76,15 @@ export const getPages = ({
                 showOnHomepage: true,
                 icon: LibraryBig,
                 category: "attending",
-                // },
-                // {
-                // 	name: "Volba přednášek",
-                // 	path: "/claims",
-                // 	file: "/attending/claims",
-                // 	showInSidebar: true,
-                // 	showOnHomepage: true,
-                // 	icon: SquareCheck,
-                // 	category: "attending",
+            },
+            {
+                name: "Volba přednášek",
+                path: "/claims",
+                file: "/attending/claims",
+                showInSidebar: true,
+                showOnHomepage: true,
+                icon: SquareCheck,
+                category: "attending",
             },
         );
 
