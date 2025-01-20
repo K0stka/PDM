@@ -327,13 +327,13 @@ const EditEvent = ({
                     <CardHeader>
                         <CardTitle className="relative flex items-center justify-between text-lg">
                             {getBlockName(event.block)}
-                            <Button
+                            {/* <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={() => setIsEditing(true)}
                             >
                                 <Pencil />
-                            </Button>
+                            </Button> */}
                         </CardTitle>
                         <CardDescription>
                             <Users /> Kapacita: {event.capacity}, <MapPin />{" "}
