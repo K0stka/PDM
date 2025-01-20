@@ -24,12 +24,14 @@ export const editUser = async (unsafe: editUserSchema) => {
 
     if (!exists) return UserError("Neplatné ID uživatele");
 
+    const userClass = date.class === "none" ? null : date.class;
+
     await db
         .update(users)
         .set({
             name: date.name,
             email: date.email,
-            class: date.class,
+            class: userClass,
             isAttending: date.isAttending,
             isTeacher: date.isTeacher,
             isPresenting: date.isPresenting,
