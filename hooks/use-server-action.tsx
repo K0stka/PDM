@@ -141,7 +141,7 @@ export const fetchWithServerAction: FetchWithServerAction = ({
     const [returningInitial, setReturningInitial] = useState(true);
     const [updating, setUpdating] = useState(true);
 
-    const fetchData = async (args: unknown[]) => {
+    const fetchData = async (args: unknown[] = []) => {
         setUpdating(true);
 
         await action(...args)

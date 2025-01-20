@@ -77,28 +77,19 @@ export const getPages = ({
                 icon: LibraryBig,
                 category: "attending",
             },
-            {
-                name: "Volba přednášek",
-                path: "/claims-disclaimer",
-                file: "/attending/disclaimer",
-                showInSidebar: true,
-                showOnHomepage: true,
-                icon: SquareCheck,
-                category: "attending",
-            },
-            // ...(isAdmin || configuration.openClaimsOn.getTime() <= Date.now()
-            //     ? [
-            //           {
-            //               name: "Volba přednášek",
-            //               path: "/claims",
-            //               file: "/attending/claims",
-            //               showInSidebar: true,
-            //               showOnHomepage: true,
-            //               icon: SquareCheck,
-            //               category: "attending",
-            //           } as PageInfo,
-            //       ]
-            //     : []),
+            ...(isAdmin || configuration.openClaimsOn.getTime() <= Date.now()
+                ? [
+                      {
+                          name: "Volba přednášek",
+                          path: "/claims",
+                          file: "/attending/claims",
+                          showInSidebar: true,
+                          showOnHomepage: true,
+                          icon: SquareCheck,
+                          category: "attending",
+                      } as PageInfo,
+                  ]
+                : []),
         );
 
     if (isTeacher)
