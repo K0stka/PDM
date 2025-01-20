@@ -49,6 +49,7 @@ export const getClaimStatus = async () => {
                     columns: {
                         block: true,
                     },
+                    where: eq(claimsTable.secondary, false),
                 },
                 events: {
                     columns: {
