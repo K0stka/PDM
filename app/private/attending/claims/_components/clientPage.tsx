@@ -14,14 +14,15 @@ import {
     fetchWithServerAction,
     useServerAction,
 } from "@/hooks/use-server-action";
-import { getClaimStatus, saveClaims } from "@/actions/claims";
+import { getClaimStatus, saveClaims } from "@/actions/claim";
 
 import { Button } from "@/components/ui/button";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { ZodError } from "zod";
 import { configuration } from "@/configuration/configuration";
 import { getBlockName } from "@/validation/block";
-import { saveClaimsSchema } from "@/validation/claims";
+import { saveClaimsSchema } from "@/validation/claim";
+import { setWillAttend } from "@/actions/accountSetup";
 import { toast } from "sonner";
 
 export interface BlockClaims {
@@ -126,6 +127,14 @@ const ClientClaims = ({ blocks }: ClientClaimsProps) => {
 
         await saveAction(data);
     };
+
+    const { action: wontAttend, pending: wontAttendPending } = useServerAction({
+        action: () => setWillAttend(false),
+        successToast: "Účast byla zrušena",
+        errorToastTitle: "Nepodařilo se zrušit účast",
+        loadingToast: "Rušení účasti...",
+        onSuccess: () => window.location.reload(),
+    });
 
     const { data: archetypes, updating } = fetchWithServerAction({
         action: async () => {
@@ -245,7 +254,14 @@ const ClientClaims = ({ blocks }: ClientClaimsProps) => {
                     </Card>
                 );
             })}
-            <div className="text-right">
+            <div className="flex items-center justify-end gap-4">
+                <ServerActionButton
+                    pending={wontAttendPending}
+                    onClick={wontAttend}
+                    variant="destructive"
+                >
+                    Nezúčastním se
+                </ServerActionButton>
                 <ServerActionButton pending={updating || saving} onClick={save}>
                     Odeslat
                 </ServerActionButton>
