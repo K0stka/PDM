@@ -77,7 +77,9 @@ export const getPages = ({
                 icon: LibraryBig,
                 category: "attending",
             },
-            ...(isAdmin || configuration.openClaimsOn.getTime() <= Date.now()
+            ...((isAdmin ||
+                configuration.openClaimsOn.getTime() <= Date.now()) &&
+            configuration.closeClaimsOn.getTime() >= Date.now()
                 ? [
                       {
                           name: "Volba přednášek",
