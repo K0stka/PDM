@@ -6,34 +6,68 @@ import { ZodError } from "zod";
 import { format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
+    return twMerge(clsx(inputs));
 }
 
 export const rethrowRedirect = (error: unknown) => {
-	if (isRedirectError(error)) throw error;
+    if (isRedirectError(error)) throw error;
 };
 
 export const inlineCatch = <T>(fn: () => T): [T, null] | [null, Error] => {
-	try {
-		return [fn() as T, null];
-	} catch (error) {
-		return [null, error as Error];
-	}
+    try {
+        return [fn() as T, null];
+    } catch (error) {
+        return [null, error as Error];
+    }
 };
 
-export const UserError = (message: string | Error | ZodError): UserErrorType => ({
-	type: "error",
-	message: message instanceof ZodError ? message.errors[0].message : message instanceof Error ? message.message : message,
+export const UserError = (
+    message: string | Error | ZodError,
+): UserErrorType => ({
+    type: "error",
+    message:
+        message instanceof ZodError
+            ? message.errors[0].message
+            : message instanceof Error
+              ? message.message
+              : message,
 });
 
-export const UnauthorizedError = (): UserErrorType => UserError("K provedení této akce nemáte dostatečná oprávnění");
+export const UnauthorizedError = (): UserErrorType =>
+    UserError("K provedení této akce nemáte dostatečná oprávnění");
 
-export const catchUserError = <T>(data: UserErrorType | T): [T, null] | [null, UserErrorType] => ((data as UserErrorType | any)?.type === "error" ? [null, data as UserErrorType] : [data as T, null]);
+export const catchUserError = <T>(
+    data: UserErrorType | T,
+): [T, null] | [null, UserErrorType] =>
+    (data as UserErrorType | { type?: unknown })?.type === "error"
+        ? [null, data as UserErrorType]
+        : [data as T, null];
 
-export const pluralHelper = (count: number, singular: string, TwoToFile: string, Many: string | null = null) => (count === 1 ? singular : (count >= 2 && count <= 4) || !Many ? TwoToFile : Many);
+export const pluralHelper = (
+    count: number,
+    singular: string,
+    TwoToFile: string,
+    Many: string | null = null,
+) =>
+    count === 1
+        ? singular
+        : (count >= 2 && count <= 4) || !Many
+          ? TwoToFile
+          : Many;
 
 export const printDate = (date: Date) => format(date, "d. M. yyyy");
 
 export const printTime = (date: Date) => format(date, "H:mm");
 
 export const printDateTime = (date: Date) => format(date, "d. M. yyyy H:mm");
+
+export const createMapById = <T, K extends keyof T>(
+    data: T[],
+    idKey: K,
+): Map<T[typeof idKey], T> => {
+    const result: Map<T[typeof idKey], T> = new Map();
+
+    data.forEach((d) => result.set(d[idKey], d));
+
+    return result;
+};

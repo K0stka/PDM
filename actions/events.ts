@@ -1,25 +1,30 @@
 "use server";
 
-import { Event, Presenter, User } from "@/lib/types";
+import { Event, User } from "@/lib/types";
+import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import {
-    UnauthorizedError,
-    UserError,
-    catchUserError,
-    inlineCatch,
-} from "@/lib/utils";
-import { and, archetypes, db, eq, events, inArray, presenters } from "@/db";
+    and,
+    archetypes,
+    blockArchetypeLookup,
+    db,
+    eq,
+    events,
+    inArray,
+    places,
+    presenters as presentersTable,
+    sql,
+    users,
+} from "@/db";
 import { createNewEventSchema, editEventSchema } from "@/validation/events";
 import { session, validateUser } from "@/auth/session";
 
 import { UserErrorType } from "@/lib/utilityTypes";
-import { getPossibleEventPresenters } from "./user";
-import { getPossiblePlacesForEvent } from "./place";
+import { recalculateBlockArchetypeLookup } from "./lookup";
 import { revalidatePath } from "next/cache";
 
 export type EditEventDetails = Omit<Event, "archetype"> & {
     presenters: {
-        id: Presenter["id"];
-        user: Pick<User, "id" | "name" | "colors">;
+        user: Pick<User, "id" | "name">;
     }[];
 };
 
@@ -47,28 +52,48 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
     if (!block) return UserError("Neplatné ID bloku");
 
     // Place
-    const places_unsafe = await getPossiblePlacesForEvent(data.block);
+    const place = await db.query.places.findFirst({
+        where: eq(places.id, data.place),
+        with: {
+            events: {
+                columns: {
+                    id: true,
+                },
+                where: eq(events.block, data.block),
+                limit: 1,
+            },
+        },
+    });
 
-    const [places, error_places] = catchUserError(places_unsafe);
-
-    if (error_places) return error_places;
-
-    if (!places.find((place) => place.id === data.place))
+    if (!place || place.events.length > 0)
         return UserError("Neplatné ID místa");
 
     // Presenters
-    const presenters_unsafe = await getPossibleEventPresenters(data.block);
+    const presenters = (
+        await db.query.users.findMany({
+            columns: { id: true },
+            where: and(
+                inArray(users.id, data.presenters),
+                eq(users.isPresenting, true),
+            ),
+            with: {
+                presents: {
+                    columns: {},
+                    with: {
+                        event: {
+                            columns: {
+                                block: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+    ).filter((presenter) =>
+        presenter.presents.every((p) => p.event.block !== data.block),
+    );
 
-    const [presenters_safe, error_presenters] =
-        catchUserError(presenters_unsafe);
-
-    if (error_presenters) return error_presenters;
-
-    if (
-        data.presenters.some(
-            (p) => !presenters_safe.find((pres) => pres.id === p),
-        )
-    )
+    if (presenters.length !== data.presenters.length)
         return UserError("Neplatné ID prezentujícího");
 
     const inserted_id = (
@@ -86,11 +111,24 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
     if (!inserted_id) return UserError("Nepodařilo se vytvořit přednášku");
 
     if (data.presenters.length > 0)
-        await db.insert(presenters).values(
+        await db.insert(presentersTable).values(
             data.presenters.map((presenter) => ({
                 event: inserted_id,
                 user: presenter,
             })),
+        );
+
+    await db
+        .update(blockArchetypeLookup)
+        .set({
+            capacity: sql`${blockArchetypeLookup.capacity} + ${data.capacity}`,
+            freeSpace: sql`${blockArchetypeLookup.freeSpace} + ${data.capacity}`,
+        })
+        .where(
+            and(
+                eq(blockArchetypeLookup.block, data.block),
+                eq(blockArchetypeLookup.archetype, data.archetype),
+            ),
         );
 
     revalidatePath("/admin/archetypes");
@@ -119,10 +157,6 @@ export const editEvent = async (unsafe: editEventSchema) => {
 
     if (!event) return UserError("Neplatné ID přednášky");
 
-    // Archetype
-    if (event.archetype !== data.archetype)
-        return UserError("Nelze změnit typ přednášky");
-
     // Block
     if (event.block !== data.block) {
         const block = await db.query.blocks.findFirst({
@@ -134,62 +168,109 @@ export const editEvent = async (unsafe: editEventSchema) => {
 
     // Place
     if (event.place !== data.place) {
-        const places_unsafe = await getPossiblePlacesForEvent(data.block);
+        const place = await db.query.places.findFirst({
+            where: eq(places.id, data.place),
+            with: {
+                events: {
+                    columns: {
+                        id: true,
+                    },
+                    where: eq(events.block, data.block),
+                    limit: 1,
+                },
+            },
+        });
 
-        const [places, error_places] = catchUserError(places_unsafe);
-
-        if (error_places) return error_places;
-
-        if (!places.find((place) => place.id === data.place))
+        if (!place || place.events.length > 0)
             return UserError("Neplatné ID místa");
     }
 
     // Presenters
-    const presenters_unsafe = await getPossibleEventPresenters(data.block);
+    const presenters = (
+        await db.query.users.findMany({
+            columns: { id: true },
+            where: and(
+                inArray(users.id, data.presenters),
+                eq(users.isPresenting, true),
+            ),
+            with: {
+                presents: {
+                    columns: {},
+                    with: {
+                        event: {
+                            columns: {
+                                id: true,
+                                block: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+    ).filter((presenter) =>
+        presenter.presents.every(
+            (p) => p.event.block !== data.block && p.event.id === data.id,
+        ),
+    );
 
-    const [presenters_safe, error_presenters] =
-        catchUserError(presenters_unsafe);
-
-    if (error_presenters) return error_presenters;
-
-    if (
-        data.presenters.some(
-            (p) =>
-                !event.presenters.find((e_p) => e_p.user === p) &&
-                !presenters_safe.find((pres) => pres.id === p),
-        )
-    )
+    if (presenters.length !== data.presenters.length)
         return UserError("Neplatné ID prezentujícího");
 
-    await db.update(events).set({
-        block: data.block,
-        place: data.place,
-        capacity: data.capacity,
-    });
-
-    const to_remove = event.presenters.filter(
-        (p) => !data.presenters.includes(p.user),
-    );
-    if (to_remove.length > 0)
-        await db.delete(presenters).where(
-            and(
-                inArray(
-                    presenters.user,
-                    to_remove.map((p) => p.user),
-                ),
-                eq(presenters.event, data.id),
-            ),
-        );
-
-    const to_add = data.presenters.filter(
-        (p) => !event.presenters.find((e_p) => e_p.user === p),
-    );
-    if (to_add.length > 0)
-        await db.insert(presenters).values(
-            to_add.map((presenter) => ({
+    await db.delete(presentersTable).where(eq(presentersTable.event, data.id));
+    if (data.presenters.length > 0)
+        await db.insert(presentersTable).values(
+            data.presenters.map((presenter) => ({
                 event: data.id,
                 user: presenter,
             })),
+        );
+
+    await db
+        .update(events)
+        .set({
+            block: data.block,
+            place: data.place,
+            capacity: data.capacity,
+        })
+        .where(eq(events.id, data.id));
+
+    if (data.capacity !== event.capacity || data.block !== event.block)
+        await recalculateBlockArchetypeLookup();
+
+    revalidatePath("/admin/archetypes");
+};
+
+export const deleteEvent = async (eventId: number) => {
+    const user = await session();
+
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    const event = await db.query.events.findFirst({
+        where: eq(events.id, eventId),
+    });
+
+    if (!event) return UserError("Neplatné ID přednášky");
+
+    if (event.attending > 0)
+        return UserError(
+            "Nelze smazat přednášku, na kterou je již někdo nahlášen",
+        );
+
+    await db.delete(presentersTable).where(eq(presentersTable.event, eventId));
+
+    await db.delete(events).where(eq(events.id, eventId));
+
+    await db
+        .update(blockArchetypeLookup)
+        .set({
+            capacity: sql`${blockArchetypeLookup.capacity} - ${event.capacity}`,
+            freeSpace: sql`${blockArchetypeLookup.freeSpace} - ${event.capacity}`,
+        })
+        .where(
+            and(
+                eq(blockArchetypeLookup.block, event.block),
+                eq(blockArchetypeLookup.archetype, event.archetype),
+            ),
         );
 
     revalidatePath("/admin/archetypes");
@@ -202,38 +283,27 @@ export const getArchetypeEvents = async (
 
     if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
-    const archetype = await db.query.archetypes.findFirst({
-        where: eq(archetypes.id, archetypeId),
-        columns: {},
+    return await db.query.events.findMany({
+        where: eq(events.archetype, archetypeId),
+        columns: {
+            id: true,
+            capacity: true,
+            attending: true,
+        },
         with: {
-            events: {
-                columns: {
-                    id: true,
-                    capacity: true,
-                },
+            block: true,
+            place: true,
+            presenters: {
+                columns: {},
                 with: {
-                    block: true,
-                    place: true,
-                    presenters: {
+                    user: {
                         columns: {
                             id: true,
-                        },
-                        with: {
-                            user: {
-                                columns: {
-                                    id: true,
-                                    name: true,
-                                    colors: true,
-                                },
-                            },
+                            name: true,
                         },
                     },
                 },
             },
         },
     });
-
-    if (!archetype) return UserError("Neplatné ID přednášky");
-
-    return archetype.events;
 };

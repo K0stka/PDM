@@ -1,6 +1,6 @@
 import {
-    archetypes as Archetypes,
     interests as Interests,
+    archetypes as archetypesTable,
     countDistinct,
     db,
     eq,
@@ -21,23 +21,23 @@ const WorkshopsPage: NextPage = async () => {
 
     const archetypes = await db
         .select({
-            ...getTableColumns(Archetypes),
-            interested: countDistinct(Interests.id),
+            ...getTableColumns(archetypesTable),
             events: countDistinct(events.id),
         })
-        .from(Archetypes)
-        .leftJoin(Interests, eq(Archetypes.id, Interests.archetype))
-        .leftJoin(events, eq(Archetypes.id, events.archetype))
-        .groupBy(Archetypes.id)
-        .orderBy(Archetypes.name);
+        .from(archetypesTable)
+        .leftJoin(events, eq(archetypesTable.id, events.archetype))
+        .groupBy(archetypesTable.id)
+        .orderBy(archetypesTable.name);
 
     const interests = user.isAttending
-        ? await db.query.interests.findMany({
-              where: eq(Interests.user, user.id),
-              columns: {
-                  archetype: true,
-              },
-          })
+        ? (
+              await db.query.interests.findMany({
+                  where: eq(Interests.user, user.id),
+                  columns: {
+                      archetype: true,
+                  },
+              })
+          ).map((interest) => interest.archetype)
         : [];
 
     return (
@@ -52,12 +52,10 @@ const WorkshopsPage: NextPage = async () => {
                     <SharedArchetypeElement
                         key={archetype.id}
                         archetype={archetype}
+                        isInterested={interests.includes(archetype.id)}
                         canExpressInterest={canUserExpressInterest(
                             user,
                             interests.length,
-                        )}
-                        isInterested={interests.some(
-                            (interest) => interest.archetype === archetype.id,
                         )}
                     />
                 ))}

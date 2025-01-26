@@ -9,26 +9,31 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { EditEventDetails, createNewEvent, editEvent } from "@/actions/events";
-import { MapPin, Pencil, Save, Users } from "lucide-react";
+import {
+    EditEventDetails,
+    createNewEvent,
+    deleteEvent,
+    editEvent,
+} from "@/actions/events";
+import { MapPin, Pencil, Save, Trash2, Users } from "lucide-react";
 import { catchUserError, inlineCatch } from "@/lib/utils";
 import { createNewEventSchema, editEventSchema } from "@/validation/events";
 import {
     fetchWithServerAction,
     useServerAction,
 } from "@/hooks/use-server-action";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
-import MultiSelect from "@/components/ui/multiSelect";
+import { MultiSelect } from "@/components/ui/multiSelect";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ZodError } from "zod";
 import { getBlockName } from "@/validation/block";
 import { getPossiblePlacesForEvent } from "@/actions/place";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface EditEventProps {
     archetypeId: number;
@@ -47,12 +52,10 @@ const EditEvent = ({
 }: EditEventProps) => {
     const [isEditing, setIsEditing] = useState(!event);
 
-    const [block, setBlock] = useState(event?.block ?? null);
-    const [place, setPlace] = useState(event?.place ?? null);
+    const [block, setBlock] = useState<number | null>(event?.block.id ?? null);
+    const [place, setPlace] = useState<number | null>();
     const [capacity, setCapacity] = useState(event?.capacity ?? 0);
-    const [presenters, setPresenters] = useState(
-        event?.presenters.map((p) => p.user) ?? [],
-    );
+    const [presenters, setPresenters] = useState<User["id"][]>();
 
     const { action: createNew, pending: createNewPending } = useServerAction({
         action: createNewEvent,
@@ -76,15 +79,23 @@ const EditEvent = ({
         },
     });
 
+    const { action: deleteAction, pending: deletePending } = useServerAction({
+        action: deleteEvent,
+        successToast: "Přednáška byla úspěšně odstraněna",
+        errorToastTitle: "Při odstraňování přednášky došlo k chybě",
+        loadingToast: "Odstraňování přednášky",
+        onSuccess: onSave,
+    });
+
     const save = async () => {
         if (event) {
             const unsafe = {
                 id: event.id,
                 archetype: archetypeId,
-                block: block?.id,
-                place: place?.id,
+                block,
+                place,
                 capacity,
-                presenters: presenters.map((presenter) => presenter.id),
+                presenters,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -103,10 +114,10 @@ const EditEvent = ({
         } else {
             const unsafe = {
                 archetype: archetypeId,
-                block: block?.id,
-                place: place?.id,
+                block,
+                place,
                 capacity,
-                presenters: presenters.map((presenter) => presenter.id),
+                presenters,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -126,22 +137,10 @@ const EditEvent = ({
     };
 
     const reset = () => {
-        setBlock(event?.block ?? null);
-        setPlace(event?.place ?? null);
+        setBlock(event?.block.id ?? null);
+        setPlace(event?.place.id ?? null);
         setCapacity(event?.capacity ?? 0);
-        setPresenters(event?.presenters.map((p) => p.user) ?? []);
-    };
-
-    const updateBlock = (blockId: number) => {
-        const block = blocks.find((block) => block.id === blockId);
-
-        setBlock(block ?? null);
-
-        setPlace(null);
-        refreshPossiblePlaces(block?.id ?? null);
-
-        setPresenters([]);
-        refreshPossiblePresenters(block?.id ?? null);
+        setPresenters(event?.presenters.map((p) => p.user.id) ?? []);
     };
 
     const {
@@ -153,7 +152,7 @@ const EditEvent = ({
             if (blockId === null) return [];
 
             const [places, message] = catchUserError(
-                await getPossiblePlacesForEvent(blockId),
+                await getPossiblePlacesForEvent(blockId, event?.id),
             );
 
             if (message) {
@@ -180,12 +179,26 @@ const EditEvent = ({
     } = fetchWithServerAction({
         action: async (
             blockId: number | null,
-        ): Promise<Pick<User, "id" | "name" | "colors">[]> => {
+        ): Promise<Pick<User, "id" | "name">[]> => {
             return [];
         },
         initial: [],
         initialArgs: [null],
     });
+
+    useEffect(() => {
+        if (!block) return;
+
+        setPlace(place === undefined ? (event?.place.id ?? null) : null);
+        setPresenters(
+            presenters === undefined
+                ? (event?.presenters.map((p) => p.user.id) ?? [])
+                : [],
+        );
+
+        refreshPossiblePlaces(block);
+        refreshPossiblePresenters(block);
+    }, [block]);
 
     return (
         <Card>
@@ -208,12 +221,10 @@ const EditEvent = ({
                             <b>Blok:</b>
                             <ComboBox
                                 className="w-auto"
-                                value={block?.id.toString()}
-                                onChange={(value) =>
-                                    updateBlock(parseInt(value))
-                                }
+                                value={block}
+                                onChange={setBlock}
                                 values={blocks.map((block) => ({
-                                    value: block.id.toString(),
+                                    value: block.id,
                                     label: getBlockName(block),
                                 }))}
                             />
@@ -226,24 +237,14 @@ const EditEvent = ({
                                         possiblePlaces.length > 0 ? (
                                             <ComboBox
                                                 className="w-auto"
-                                                value={place?.id.toString()}
-                                                onChange={(value) => {
-                                                    const place =
-                                                        possiblePlaces.find(
-                                                            (place) =>
-                                                                place.id.toString() ===
-                                                                value,
-                                                        );
-                                                    setPlace(place ?? null);
-                                                }}
-                                                values={
-                                                    possiblePlaces.map(
-                                                        (place) => ({
-                                                            value: place.id.toString(),
-                                                            label: place.name,
-                                                        }),
-                                                    ) ?? []
-                                                }
+                                                value={place}
+                                                onChange={setPlace}
+                                                values={possiblePlaces.map(
+                                                    (p) => ({
+                                                        value: p.id,
+                                                        label: p.name,
+                                                    }),
+                                                )}
                                             />
                                         ) : (
                                             <div className="text-center text-sm text-muted-foreground">
@@ -260,29 +261,12 @@ const EditEvent = ({
                                     {!possiblePresentersUpdating ? (
                                         possiblePresenters.length > 0 ? (
                                             <MultiSelect
-                                                value={presenters.map(
+                                                className="w-auto"
+                                                value={presenters ?? []}
+                                                onChange={setPresenters}
+                                                values={possiblePresenters.map(
                                                     (presenter) => ({
-                                                        value: presenter.id.toString(),
-                                                        label: presenter.name,
-                                                    }),
-                                                )}
-                                                onChange={(value) =>
-                                                    setPresenters(
-                                                        value.map(
-                                                            (id) =>
-                                                                possiblePresenters.find(
-                                                                    (
-                                                                        presenter,
-                                                                    ) =>
-                                                                        presenter.id.toString() ===
-                                                                        id.value,
-                                                                )!,
-                                                        ),
-                                                    )
-                                                }
-                                                defaultOptions={possiblePresenters.map(
-                                                    (presenter) => ({
-                                                        value: presenter.id.toString(),
+                                                        value: presenter.id,
                                                         label: presenter.name,
                                                     }),
                                                 )}
@@ -320,6 +304,17 @@ const EditEvent = ({
                             <Save />
                             Uložit
                         </ServerActionButton>
+                        {event && (
+                            <ServerActionButton
+                                size="sm"
+                                variant="destructive"
+                                pending={deletePending}
+                                onClick={() => deleteAction(event.id)}
+                            >
+                                <Trash2 />
+                                Smazat
+                            </ServerActionButton>
+                        )}
                     </CardFooter>
                 </>
             ) : event ? (
@@ -327,13 +322,13 @@ const EditEvent = ({
                     <CardHeader>
                         <CardTitle className="relative flex items-center justify-between text-lg">
                             {getBlockName(event.block)}
-                            {/* <Button
+                            <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={() => setIsEditing(true)}
                             >
                                 <Pencil />
-                            </Button> */}
+                            </Button>
                         </CardTitle>
                         <CardDescription>
                             <Users /> Kapacita: {event.capacity}, <MapPin />{" "}

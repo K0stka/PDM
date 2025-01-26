@@ -23,7 +23,7 @@ import { toast } from "sonner";
 interface EditEventProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    archetype: { id: Archetype["id"]; numberOfEvents: number };
+    archetype: Archetype["id"] | null;
     blocks: Block[];
 }
 
@@ -39,7 +39,9 @@ const EditEvents = ({
         returningInitial: updatingEvents,
         refresh: updateEvents,
     } = fetchWithServerAction({
-        action: async (archetypeId: Archetype["id"]) => {
+        action: async (archetypeId: Archetype["id"] | null) => {
+            if (archetypeId === null) return [];
+
             const response = await getArchetypeEvents(archetypeId);
 
             const [events, error] = catchUserError(response);
@@ -55,12 +57,14 @@ const EditEvents = ({
             return events;
         },
         initial: [],
-        initialArgs: [archetype.id],
+        initialArgs: [archetype],
     });
 
     useEffect(() => {
-        updateEvents(archetype.id);
+        updateEvents(archetype);
     }, [archetype]);
+
+    if (archetype === null) return null;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,28 +75,30 @@ const EditEvents = ({
                 </DialogHeader>
                 {createNew && (
                     <EditEvent
-                        archetypeId={archetype.id}
+                        archetypeId={archetype}
                         blocks={blocks}
                         cancelCreateNew={() => setCreateNew(false)}
-                        onSave={() => updateEvents(archetype.id)}
+                        onSave={() => updateEvents(archetype)}
                     />
                 )}
-                {archetype.numberOfEvents === 0 && !createNew ? (
-                    <div className="my-8 text-center text-sm text-muted-foreground">
-                        Ještě nebyly vytvořeny žádné přednášky
-                    </div>
-                ) : !updatingEvents ? (
-                    events.map((event) => (
-                        <EditEvent
-                            archetypeId={archetype.id}
-                            blocks={blocks}
-                            key={event.id}
-                            event={event}
-                            onSave={() => updateEvents(archetype.id)}
-                        />
-                    ))
+                {!updatingEvents ? (
+                    events.length > 0 || createNew ? (
+                        events.map((event) => (
+                            <EditEvent
+                                archetypeId={archetype}
+                                blocks={blocks}
+                                key={event.id}
+                                event={event}
+                                onSave={() => updateEvents(archetype)}
+                            />
+                        ))
+                    ) : (
+                        <div className="my-8 text-center text-sm text-muted-foreground">
+                            Ještě nebyly vytvořeny žádné přednášky
+                        </div>
+                    )
                 ) : (
-                    [...Array(archetype.numberOfEvents).keys()].map((id) => (
+                    [0, 1, 2].map((id) => (
                         <Skeleton className="h-20 rounded" key={id} />
                     ))
                 )}

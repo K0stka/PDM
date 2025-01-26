@@ -32,7 +32,7 @@ export const archetypes = pgTable("archetypes", {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: 255 }).notNull(),
     description: varchar("description", { length: 2047 }).notNull(),
-    canceled: boolean("canceled").notNull().default(false),
+    interested: integer("interested").notNull().default(0),
 });
 
 export const blocks = pgTable("blocks", {
@@ -59,10 +59,10 @@ export const events = pgTable(
         place: integer("place")
             .notNull()
             .references(() => places.id),
+        attending: integer("attending").notNull().default(0),
         capacity: integer("capacity").notNull(),
     },
     (table) => [
-        uniqueIndex("event_block_place_index").on(table.block, table.place),
         index("event_block_index").on(table.block),
         index("event_place_index").on(table.place),
         index("event_archetype_index").on(table.archetype),
@@ -118,7 +118,6 @@ export const claims = pgTable(
             .notNull()
             .references(() => blocks.id),
         secondary: boolean("secondary").notNull().default(false),
-        cancelled: boolean("cancelled").notNull().default(false),
         timestamp: timestamp("timestamp").notNull(),
     },
     (table) => [
@@ -144,5 +143,28 @@ export const attendance = pgTable(
     (table) => [
         index("attendance_user_index").on(table.user),
         index("attendance_event_index").on(table.event),
+    ],
+);
+
+export const blockArchetypeLookup = pgTable(
+    "blockArchetypeLookup",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        block: integer("block")
+            .notNull()
+            .references(() => blocks.id),
+        archetype: integer("archetype")
+            .notNull()
+            .references(() => archetypes.id),
+        freeSpace: integer("free_space").notNull(),
+        capacity: integer("capacity").notNull(),
+    },
+    (table) => [
+        uniqueIndex("lookup_block_archetype_index").on(
+            table.block,
+            table.archetype,
+        ),
+        index("lookup_block_index").on(table.block),
+        index("lookup_archetype_index").on(table.archetype),
     ],
 );

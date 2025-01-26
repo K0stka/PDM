@@ -1,6 +1,5 @@
 "use client";
 
-import { Block } from "@/lib/types";
 import { EditBlockInfo } from "../page";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Trash2 } from "lucide-react";

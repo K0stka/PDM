@@ -7,7 +7,7 @@ import {
     LibraryBig,
     LucideIcon,
     MapPin,
-    MapPinned,
+    PocketKnife,
     SquareCheck,
     Timer,
     UserRoundCog,
@@ -15,6 +15,7 @@ import {
 
 import { Either } from "./utilityTypes";
 import { UserPermissions } from "./types";
+import { canEditClaimsNow } from "@/validation/claim";
 import { configuration } from "@/configuration/configuration";
 import { roleNames } from "@/configuration/roles";
 
@@ -30,7 +31,7 @@ export type PageInfo = {
     ) & {
         name: string;
         icon: LucideIcon;
-        category: keyof typeof roleNames | "misc";
+        category: keyof typeof roleNames | "misc" | "maintenance";
     }
 >;
 
@@ -77,9 +78,7 @@ export const getPages = ({
                 icon: LibraryBig,
                 category: "attending",
             },
-            ...((isAdmin ||
-                configuration.openClaimsOn.getTime() <= Date.now()) &&
-            configuration.closeClaimsOn.getTime() >= Date.now()
+            ...(canEditClaimsNow({ isAdmin })
                 ? [
                       {
                           name: "Volba přednášek",
@@ -108,15 +107,15 @@ export const getPages = ({
 
     if (isAdmin)
         pages.push(
-            // {
-            // 	name: "Rozvrh",
-            // 	path: "/timetable",
-            // 	file: "/admin/timetable",
-            // 	showInSidebar: true,
-            // 	// showOnHomepage: true,
-            // 	icon: CalendarRange,
-            // 	category: "admin",
-            // },
+            {
+                name: "Rozvrh",
+                path: "/timetable",
+                file: "/admin/timetable",
+                showInSidebar: true,
+                showOnHomepage: true,
+                icon: CalendarRange,
+                category: "admin",
+            },
             {
                 name: "Správa přednášek",
                 path: "/workshops/edit",
@@ -170,6 +169,14 @@ export const getPages = ({
                 showInSidebar: true,
                 icon: ChartColumnStacked,
                 category: "admin",
+            },
+            {
+                name: "Nástroje",
+                path: "/utility",
+                file: "/admin/utility",
+                showInSidebar: true,
+                icon: PocketKnife,
+                category: "maintenance",
             },
         );
 

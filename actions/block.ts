@@ -1,77 +1,99 @@
 "use server";
 
-import { UnauthorizedError, UserError, inlineCatch, pluralHelper } from "@/lib/utils";
+import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import { addBlockSchema, editBlockSchema } from "@/validation/block";
-import { blocks, count, db, eq, events, getTableColumns } from "@/db";
+import { blockArchetypeLookup, blocks, db, eq } from "@/db";
 import { session, validateUser } from "@/auth/session";
 
-import { Block } from "@/lib/types";
-import { UserErrorType } from "@/lib/utilityTypes";
 import { revalidatePath } from "next/cache";
 
 export const addBlock = async (unsafe: addBlockSchema) => {
-	const user = await session();
+    const user = await session();
 
-	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
-	const [block, error] = inlineCatch(() => addBlockSchema.parse(unsafe));
+    const [block, error] = inlineCatch(() => addBlockSchema.parse(unsafe));
 
-	if (error) return UserError(error);
+    if (error) return UserError(error);
 
-	await db.insert(blocks).values(block);
+    const newId = (
+        await db
+            .insert(blocks)
+            .values(block)
+            .returning({ insertedId: blocks.id })
+    )[0].insertedId;
 
-	revalidatePath("/admin/blocks");
+    const archetypes = await db.query.archetypes.findMany({
+        columns: {
+            id: true,
+        },
+    });
+
+    await db.insert(blockArchetypeLookup).values(
+        archetypes.map(({ id }) => ({
+            archetype: id,
+            block: newId,
+            freeSpace: 0,
+            capacity: 0,
+        })),
+    );
+
+    revalidatePath("/admin/blocks");
 };
 
 export const editBlock = async (unsafe: editBlockSchema) => {
-	const user = await session();
+    const user = await session();
 
-	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
-	const [block, error] = inlineCatch(() => editBlockSchema.parse(unsafe));
+    const [block, error] = inlineCatch(() => editBlockSchema.parse(unsafe));
 
-	if (error) return UserError(error);
+    if (error) return UserError(error);
 
-	const exists = await db.query.blocks.findFirst({
-		where: eq(blocks.id, block.id),
-	});
+    const exists = await db.query.blocks.findFirst({
+        where: eq(blocks.id, block.id),
+    });
 
-	if (!exists) return UserError("Blok neexistuje");
+    if (!exists) return UserError("Blok neexistuje");
 
-	await db
-		.update(blocks)
-		.set({
-			from: block.from,
-			to: block.to,
-		})
-		.where(eq(blocks.id, block.id));
+    await db
+        .update(blocks)
+        .set({
+            from: block.from,
+            to: block.to,
+        })
+        .where(eq(blocks.id, block.id));
 
-	revalidatePath("/admin/blocks");
+    revalidatePath("/admin/blocks");
 };
 
 export const deleteBlock = async (id: number) => {
-	const user = await session();
+    const user = await session();
 
-	if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
-	const exists = (
-		await db
-			.select({
-				id: blocks.id,
-				events: count(events.id),
-			})
-			.from(blocks)
-			.leftJoin(events, eq(blocks.id, events.block))
-			.where(eq(blocks.id, id))
-			.groupBy(blocks.id)
-			.limit(1)
-	)[0];
+    const exists = await db.query.blocks.findFirst({
+        where: eq(blocks.id, id),
+        with: {
+            events: {
+                columns: {
+                    id: true,
+                },
+                limit: 1,
+            },
+        },
+    });
 
-	if (!exists) return UserError("Blok neexistuje");
+    if (!exists) return UserError("Blok neexistuje");
 
-	if (exists.events > 0) return UserError(`Blok nelze odstranit, protože se během něj ${pluralHelper(exists.events, "koná", "konají")} ${exists.events} ${pluralHelper(exists.events, "událost", "události", "událostí")}`);
+    if (exists.events.length > 0)
+        return UserError("Blok nelze smazat, protože se během něj konají akce");
 
-	await db.delete(blocks).where(eq(blocks.id, id));
+    await db.delete(blocks).where(eq(blocks.id, id));
 
-	revalidatePath("/admin/blocks");
+    await db
+        .delete(blockArchetypeLookup)
+        .where(eq(blockArchetypeLookup.block, id));
+
+    revalidatePath("/admin/blocks");
 };

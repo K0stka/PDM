@@ -41,7 +41,7 @@ export type Archetype = {
     id: number;
     name: string;
     description: string;
-    canceled: boolean;
+    interested: number;
 };
 
 export type Block = {
@@ -60,6 +60,7 @@ export type Event = {
     archetype: Archetype;
     block: Block;
     place: Place;
+    attending: number;
     capacity: number;
 };
 
@@ -81,7 +82,6 @@ export type Claim = {
     archetype: Archetype;
     block: Block;
     secondary: boolean;
-    cancelled: boolean;
     timestamp: Date;
 };
 

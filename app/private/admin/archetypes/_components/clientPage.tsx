@@ -24,37 +24,34 @@ const EditArchetypesClientPage = ({
     blocks,
 }: EditArchetypesClientPageProps) => {
     const [addArchetypeOpen, setAddArchetypeOpen] = useState(false);
+
     const [editArchetypeOpen, setEditArchetypeOpen] = useState(false);
     const [editArchetype, setEditArchetype] = useState<
         (Archetype & { interested: number; events: number }) | null
     >(null);
+
     const [editArchetypeEventsOpen, setEditArchetypeEventsOpen] =
         useState(false);
-    const [editArchetypeEvents, setEditArchetypeEvents] = useState<{
-        id: Archetype["id"];
-        numberOfEvents: number;
-    } | null>(null);
+    const [editArchetypeEvents, setEditArchetypeEvents] = useState<
+        Archetype["id"] | null
+    >(null);
 
     return (
         <>
             <Dialog open={addArchetypeOpen} onOpenChange={setAddArchetypeOpen}>
                 <AddArchetypeDialog setOpen={setAddArchetypeOpen} />
             </Dialog>
-            {editArchetype && (
-                <EditArchetype
-                    open={editArchetypeOpen}
-                    onOpenChange={setEditArchetypeOpen}
-                    archetype={editArchetype}
-                />
-            )}
-            {editArchetypeEvents && (
-                <EditEvents
-                    open={editArchetypeEventsOpen}
-                    onOpenChange={setEditArchetypeEventsOpen}
-                    archetype={editArchetypeEvents}
-                    blocks={blocks}
-                />
-            )}
+            <EditArchetype
+                open={editArchetypeOpen}
+                onOpenChange={setEditArchetypeOpen}
+                archetype={editArchetype}
+            />
+            <EditEvents
+                open={editArchetypeEventsOpen}
+                onOpenChange={setEditArchetypeEventsOpen}
+                archetype={editArchetypeEvents}
+                blocks={blocks}
+            />
             <PageTemplate
                 title="Správa přednášek"
                 actions={[

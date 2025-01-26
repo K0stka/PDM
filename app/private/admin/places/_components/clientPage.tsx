@@ -8,7 +8,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Plus, Presentation, Timer, Trash2, Users } from "lucide-react";
+import {
+    Pencil,
+    Plus,
+    Presentation,
+    Timer,
+    UserCheck,
+    Users,
+} from "lucide-react";
 
 import AddPlace from "./addPlace";
 import { Button } from "@/components/ui/button";
@@ -74,6 +81,10 @@ const PlacesClientPage = ({ places }: PlacesClientPageProps) => {
                                         <CardDescription className="flex items-center gap-2">
                                             <Users />
                                             Kapacita: {event.capacity}
+                                        </CardDescription>
+                                        <CardDescription className="flex items-center gap-2">
+                                            <UserCheck />
+                                            Účastníci: {event.attending}
                                         </CardDescription>
                                         <CardDescription className="flex flex-wrap items-center gap-2">
                                             <span>

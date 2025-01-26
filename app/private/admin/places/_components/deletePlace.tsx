@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useServerAction } from "@/hooks/use-server-action";
 
 interface DeletePlaceButtonProps {
-    place: Place & { events: any[] };
+    place: Place & { events: unknown[] };
 }
 
 const DeletePlaceButton = ({ place }: DeletePlaceButtonProps) => {

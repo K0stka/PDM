@@ -1,131 +1,99 @@
 "use client";
 
-import { Block, Claim } from "@/lib/types";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { act, useEffect, useState } from "react";
-import { catchUserError, cn, inlineCatch, pluralHelper } from "@/lib/utils";
+import { Archetype, Block } from "@/lib/types";
 import {
     fetchWithServerAction,
     useServerAction,
 } from "@/hooks/use-server-action";
-import { getClaimStatus, saveClaims } from "@/actions/claim";
+import { getBlocksState, saveClaims } from "@/actions/claim";
 
-import { Button } from "@/components/ui/button";
+import BlockElement from "./block";
 import ServerActionButton from "@/components/utility/ServerActionButton";
-import { ZodError } from "zod";
+import { Skeleton } from "@/components/ui/skeleton";
+import { catchUserError } from "@/lib/utils";
 import { configuration } from "@/configuration/configuration";
-import { getBlockName } from "@/validation/block";
-import { saveClaimsSchema } from "@/validation/claim";
 import { setWillAttend } from "@/actions/accountSetup";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export interface BlockClaims {
-    primaryClaim:
-        | (Pick<Claim, "secondary"> & {
-              id: Claim["id"] | null;
-              archetype: number;
-              block: number;
-          })
-        | null;
-    secondaryClaim:
-        | (Pick<Claim, "secondary"> & {
-              id: Claim["id"] | null;
-              archetype: number;
-              block: number;
-          })
-        | null;
+    [key: Block["id"]]: {
+        primary: Archetype["id"] | null;
+        secondary: Archetype["id"] | null;
+    };
 }
 
-interface ClientClaimsProps {
-    blocks: (Block & {
-        claims: BlockClaims;
-    })[];
-}
+const ClientClaims = () => {
+    const [claims, setClaims] = useState<BlockClaims>({});
 
-const ClientClaims = ({ blocks }: ClientClaimsProps) => {
-    const [claims, setClaims] = useState<{ [key: Block["id"]]: BlockClaims }>(
-        {},
-    );
+    const {
+        data: blockState,
+        returningInitial: loadingBlockState,
+        refresh: refreshData,
+    } = fetchWithServerAction({
+        action: async (first: boolean) => {
+            const response = await getBlocksState();
 
-    useEffect(() => {
-        const initialClaims: { [key: Block["id"]]: BlockClaims } = {};
+            const [data, error] = catchUserError(response);
 
-        blocks.forEach((block) => (initialClaims[block.id] = block.claims));
+            if (error) {
+                toast.error("Při načítání dat došlo k chybě", {
+                    description: error.message,
+                });
 
-        setClaims(initialClaims);
-    }, [blocks]);
+                return [];
+            }
 
-    const setPrimary = (blockId: Block["id"], archetypeId: number) => {
-        setClaims((claims) => ({
-            ...claims,
-            [blockId]: {
-                primaryClaim: {
-                    id: null,
-                    archetype: archetypeId,
-                    block: blockId,
-                    secondary: false,
-                },
-                secondaryClaim: null,
-            },
-        }));
-    };
+            if (first) {
+                const blockClaims: BlockClaims = {};
 
-    const setSecondary = (blockId: Block["id"], archetypeId: number) => {
-        setClaims((claims) => ({
-            ...claims,
-            [blockId]: {
-                ...claims[blockId],
-                secondaryClaim: {
-                    id: null,
-                    archetype: archetypeId,
-                    block: blockId,
-                    secondary: true,
-                },
-            },
-        }));
-    };
+                data.forEach((d) => {
+                    blockClaims[d.id] = {
+                        primary: d.primaryClaim,
+                        secondary: d.secondaryClaim,
+                    };
+                });
+
+                setClaims(blockClaims);
+            }
+
+            return data;
+        },
+        initial: [],
+        initialArgs: [true],
+    });
 
     const { action: saveAction, pending: saving } = useServerAction({
         action: saveClaims,
-        successToast: "Přihlášení do přednášek bylo úspěšné",
-        errorToastTitle: "Nepodařilo se přihlásit do přednášek",
-        loadingToast: "Ukládání přihlášek...",
+        successToast: "Volba byla uložena",
+        errorToastTitle: "Nepodařilo se uložit volbu",
+        loadingToast: "Ukládání volby...",
+        onSuccess: () => refreshData(false),
     });
 
-    const save = async () => {
+    const save = () => {
+        if (blockState.some((b) => claims[b.id].primary === null)) {
+            toast.warning("Vyberte primární přednášku pro všechny bloky");
+
+            return;
+        }
+
         if (
-            blocks.some(
-                (block) =>
-                    claims[block.id].primaryClaim === null ||
-                    claims[block.id].secondaryClaim === null,
-            )
+            configuration.secondaryClaims &&
+            blockState.some((b) => claims[b.id].secondary === null)
         ) {
-            toast.error("Nepodařilo se odeslat přihlášky", {
-                description: "Chybí některé bloky",
-            });
+            toast.warning("Vyberte sekundární přednášku pro všechny bloky");
 
             return;
         }
 
-        const [data, error] = inlineCatch(() =>
-            saveClaimsSchema.parse(blocks.map((block) => claims[block.id])),
+        saveAction(
+            blockState.map((b) => ({
+                block: b.id,
+                primaryArchetype: claims[b.id].primary!,
+                secondaryArchetype: claims[b.id].secondary ?? undefined,
+            })),
         );
-
-        if (error) {
-            toast.error("Nepodařilo se odeslat přihlášky", {
-                description: (error as ZodError).message,
-            });
-
-            return;
-        }
-
-        await saveAction(data);
     };
 
     const { action: wontAttend, pending: wontAttendPending } = useServerAction({
@@ -136,124 +104,76 @@ const ClientClaims = ({ blocks }: ClientClaimsProps) => {
         onSuccess: () => window.location.reload(),
     });
 
-    const { data: archetypes, updating } = fetchWithServerAction({
-        action: async () => {
-            const unsafe = await getClaimStatus();
+    const updateClaims = (
+        blockId: Block["id"],
+        newClaims: BlockClaims[number],
+    ) => {
+        if (
+            blockState.some((b) => {
+                if (b.id === blockId) return false;
 
-            const [data, error] = catchUserError(unsafe);
+                if (
+                    newClaims.primary !== null &&
+                    claims[b.id].primary === newClaims.primary
+                ) {
+                    toast.warning("Nelze vybrat 2 stejné primární přednášky");
 
-            if (error) {
-                toast.error("Nepodařilo se načíst aktuální stav", {
-                    description: error.message,
-                });
+                    return true;
+                }
 
-                return [];
-            }
+                if (
+                    newClaims.secondary !== null &&
+                    newClaims.secondary === claims[b.id].primary
+                ) {
+                    toast.warning(
+                        "Nelze zvolit stejnou sekundární přednášku jako primární v jiném bloku",
+                    );
 
-            return data;
-        },
-        initial: [],
-        refreshAfter: 60,
-    });
+                    return true;
+                }
+
+                if (
+                    newClaims.secondary !== null &&
+                    newClaims.secondary === claims[b.id].secondary
+                ) {
+                    toast.warning("Nelze vybrat 2 stejné sekundární přednášky");
+
+                    return true;
+                }
+
+                return false;
+            })
+        )
+            return;
+
+        setClaims((oldClaims) => ({
+            ...oldClaims,
+            [blockId]: newClaims,
+        }));
+    };
 
     return (
         <div className="flex flex-col gap-4">
-            {blocks.map((block) => {
-                const blockClaims = claims[block.id];
-
-                return (
-                    <Card key={block.id}>
-                        <CardHeader>
-                            <CardTitle>{getBlockName(block)}</CardTitle>
-                            <CardDescription>
-                                {configuration.secondaryClaims
-                                    ? "Zvolte jednu hlavní a jednu náhradní přednášku"
-                                    : "Prosím zvolte přednášku pro daný blok"}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {archetypes.map((archetype) => {
-                                const freeSpace =
-                                    archetype.capacityPerBlock[block.id] -
-                                    archetype.claimsPerBlock[block.id];
-
-                                const selectedAsPrimary =
-                                    blockClaims.primaryClaim?.archetype ===
-                                    archetype.id;
-                                const selectedAsSecondary =
-                                    blockClaims.secondaryClaim?.archetype ===
-                                    archetype.id;
-
-                                return (
-                                    <Card
-                                        key={archetype.id}
-                                        className={cn({
-                                            "cursor-pointer": freeSpace > 0,
-                                            "cursor-not-allowed":
-                                                freeSpace <= 0 &&
-                                                !selectedAsPrimary,
-                                            "border-yellow-500 bg-yellow-500/70 [&_span]:text-black":
-                                                selectedAsPrimary,
-                                        })}
-                                        onClick={() => {
-                                            if (freeSpace <= 0) return;
-
-                                            setPrimary(block.id, archetype.id);
-                                        }}
-                                    >
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">
-                                                <span>{archetype.name}</span>
-                                            </CardTitle>
-                                            <CardDescription className="flex items-center justify-between">
-                                                <span>
-                                                    {pluralHelper(
-                                                        freeSpace,
-                                                        "Zbývá",
-                                                        "Zbývají",
-                                                        "Zbývá",
-                                                    )}{" "}
-                                                    {freeSpace}{" "}
-                                                    {pluralHelper(
-                                                        freeSpace,
-                                                        "místo",
-                                                        "místa",
-                                                        "míst",
-                                                    )}
-                                                </span>
-                                                <Button
-                                                    className="disabled:opacity-70"
-                                                    variant={
-                                                        selectedAsSecondary
-                                                            ? "default"
-                                                            : "outline"
-                                                    }
-                                                    size="sm"
-                                                    disabled={
-                                                        blockClaims.primaryClaim
-                                                            ?.archetype ===
-                                                        archetype.id
-                                                    }
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-
-                                                        setSecondary(
-                                                            block.id,
-                                                            archetype.id,
-                                                        );
-                                                    }}
-                                                >
-                                                    Náhradní
-                                                </Button>
-                                            </CardDescription>
-                                        </CardHeader>
-                                    </Card>
-                                );
-                            })}
-                        </CardContent>
-                    </Card>
-                );
-            })}
+            {!loadingBlockState ? (
+                <>
+                    {blockState.map((block) => (
+                        <BlockElement
+                            key={block.id}
+                            block={block}
+                            claims={claims[block.id]}
+                            onClaimsChange={(newClaims) =>
+                                updateClaims(block.id, newClaims)
+                            }
+                        />
+                    ))}
+                </>
+            ) : (
+                <>
+                    {[0, 1].map((id) => (
+                        <Skeleton className="h-64 rounded" key={id} />
+                    ))}
+                </>
+            )}
             <div className="flex items-center justify-end gap-4">
                 <ServerActionButton
                     pending={wontAttendPending}
@@ -262,8 +182,11 @@ const ClientClaims = ({ blocks }: ClientClaimsProps) => {
                 >
                     Nezúčastním se
                 </ServerActionButton>
-                <ServerActionButton pending={updating || saving} onClick={save}>
-                    Odeslat
+                <ServerActionButton
+                    pending={loadingBlockState || saving}
+                    onClick={save}
+                >
+                    Uložit
                 </ServerActionButton>
             </div>
         </div>

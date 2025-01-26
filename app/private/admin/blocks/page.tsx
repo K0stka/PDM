@@ -1,10 +1,11 @@
-import { Archetype, Block, Event, User } from "@/lib/types";
-import { asc, blocks as blocksTable, db, places as placesTable } from "@/db";
+import { asc, blocks as blocksTable, db } from "@/db";
 
+import { Block } from "@/lib/types";
 import BlocksClientPage from "./_components/clientPage";
 import { NextPage } from "next";
 
 export type EditBlockInfo = Block & {
+    freeSpace: number;
     capacity: number;
     events: number;
 };
@@ -12,11 +13,7 @@ export type EditBlockInfo = Block & {
 const BlocksPage: NextPage = async () => {
     const data = await db.query.blocks.findMany({
         with: {
-            events: {
-                columns: {
-                    capacity: true,
-                },
-            },
+            archetypeLookup: true,
         },
         orderBy: asc(blocksTable.from),
     });
@@ -25,8 +22,18 @@ const BlocksPage: NextPage = async () => {
         id: block.id,
         from: block.from,
         to: block.to,
-        capacity: block.events.reduce((acc, event) => acc + event.capacity, 0),
-        events: block.events.length,
+        freeSpace: block.archetypeLookup.reduce(
+            (acc, lookup) => acc + lookup.freeSpace,
+            0,
+        ),
+        capacity: block.archetypeLookup.reduce(
+            (acc, event) => acc + event.capacity,
+            0,
+        ),
+        events: block.archetypeLookup.reduce(
+            (acc, lookup) => acc + (lookup.capacity > 0 ? 1 : 0),
+            0,
+        ),
     }));
 
     return <BlocksClientPage blocks={blocks} />;

@@ -19,6 +19,19 @@ export const createNewEventSchema = z.object({
 
 export type createNewEventSchema = z.infer<typeof createNewEventSchema>;
 
-export const editEventSchema = createNewEventSchema.merge(withId);
+export const editEventSchema = z
+    .object({
+        block: z.number({
+            message: "Nebyl zvolen blok přednášky",
+        }),
+        place: z.number({
+            message: "Nebylo zvoleno místo přednášky",
+        }),
+        capacity: z.number().min(1, {
+            message: "Kapacita přednášky musí být větší než 0",
+        }),
+        presenters: z.array(z.number()),
+    })
+    .merge(withId);
 
 export type editEventSchema = z.infer<typeof editEventSchema>;

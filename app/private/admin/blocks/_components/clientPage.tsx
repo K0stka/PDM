@@ -7,7 +7,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Pencil, Plus, Presentation, Users } from "lucide-react";
+import { Pencil, Plus, Presentation, UserCheck, Users } from "lucide-react";
 
 import AddBlock from "./addBlock";
 import { Block } from "@/lib/types";
@@ -67,6 +67,11 @@ const BlocksClientPage = ({ blocks }: BlocksClientPageProps) => {
                             <div className="flex items-center gap-2">
                                 <Users />
                                 Celková Kapacita: {block.capacity}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <UserCheck />
+                                Počet přihlášených:{" "}
+                                {block.capacity - block.freeSpace}
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-wrap justify-end gap-2">

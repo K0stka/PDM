@@ -23,31 +23,32 @@ import {
 } from "@/components/ui/popover";
 
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 import { SetState } from "@/lib/utilityTypes";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 
-type ComboBoxValue = {
-    value: string;
+type ComboBoxValue<T extends string | number> = {
+    value: T;
     label?: string;
 };
 
-interface ComboBoxProps {
-    value: string | undefined | null;
-    onChange: (value: string) => void;
-    values: ComboBoxValue[];
+interface ComboBoxProps<T extends string | number> {
+    value: T | undefined | null;
+    onChange: (value: T) => void;
+    values: ComboBoxValue<T>[];
     placeholder?: string;
     className?: string;
 }
 
-export function ComboBox({
+export function ComboBox<T extends string | number>({
     values,
     value,
     onChange,
     placeholder,
     className,
-}: ComboBoxProps) {
+}: ComboBoxProps<T>) {
     const isMobile = useIsMobile();
     const [open, setOpen] = useState(false);
 
@@ -60,7 +61,10 @@ export function ComboBox({
                 <DrawerTrigger asChild>
                     <Button
                         variant="outline"
-                        className={cn("w-[150px] justify-start", className)}
+                        className={cn(
+                            "w-[150px] justify-start truncate",
+                            className,
+                        )}
                     >
                         {label ?? placeholder ?? "Prosím vyberte možnost..."}
                     </Button>
@@ -70,11 +74,12 @@ export function ComboBox({
                         <DrawerTitle />
                         <DrawerDescription />
                     </DrawerHeader>
-                    <div className="mt-4 border-t">
+                    <div className="mt-4 border-t pb-4">
                         <ValuesList
                             values={values}
                             setOpen={setOpen}
                             onChange={onChange}
+                            selectedValue={value}
                         />
                     </div>
                 </DrawerContent>
@@ -86,7 +91,10 @@ export function ComboBox({
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
-                    className={cn("w-[150px] justify-start", className)}
+                    className={cn(
+                        "w-[150px] justify-start truncate",
+                        className,
+                    )}
                 >
                     {label ?? placeholder ?? "Prosím vyberte možnost..."}
                 </Button>
@@ -96,19 +104,26 @@ export function ComboBox({
                     values={values}
                     setOpen={setOpen}
                     onChange={onChange}
+                    selectedValue={value}
                 />
             </PopoverContent>
         </Popover>
     );
 }
 
-interface ValuesListProps {
-    values: ComboBoxValue[];
+interface ValuesListProps<T extends string | number> {
+    values: ComboBoxValue<T>[];
     setOpen: SetState<boolean>;
-    onChange: (status: string) => void;
+    onChange: (status: T) => void;
+    selectedValue: T | undefined | null;
 }
 
-function ValuesList({ values, setOpen, onChange }: ValuesListProps) {
+function ValuesList<T extends string | number>({
+    values,
+    setOpen,
+    onChange,
+    selectedValue,
+}: ValuesListProps<T>) {
     return (
         <Command>
             <CommandInput placeholder="Vyhledat..." />
@@ -117,18 +132,24 @@ function ValuesList({ values, setOpen, onChange }: ValuesListProps) {
                     Žádná z možností neodpovídá hledání...
                 </CommandEmpty>
                 <CommandGroup>
-                    {values.map((value) => (
-                        <CommandItem
-                            key={value.value}
-                            value={value.value}
-                            onSelect={() => {
-                                onChange(value.value);
-                                setOpen(false);
-                            }}
-                        >
-                            {value.label ?? value.value}
-                        </CommandItem>
-                    ))}
+                    {values.map((val) => {
+                        const isSelected = selectedValue === val.value;
+                        return (
+                            <CommandItem
+                                className="flex items-center justify-between p-3 md:px-2 md:py-1.5"
+                                key={val.value}
+                                onSelect={() => {
+                                    onChange(val.value);
+                                    setOpen(false);
+                                }}
+                            >
+                                <span>{val.label ?? val.value}</span>
+                                {isSelected && (
+                                    <Check className="mr-2 h-4 w-4" />
+                                )}
+                            </CommandItem>
+                        );
+                    })}
                 </CommandGroup>
             </CommandList>
         </Command>

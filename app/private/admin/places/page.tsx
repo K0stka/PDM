@@ -1,5 +1,5 @@
 import { Archetype, Block, Event, Place, User } from "@/lib/types";
-import { asc, blocks, db, events, places as placesTable } from "@/db";
+import { asc, db, events, places as placesTable } from "@/db";
 
 import { NextPage } from "next";
 import PlacesClientPage from "./_components/clientPage";
@@ -10,6 +10,7 @@ export type EditPlaceInfo = Place & {
         archetype: Pick<Archetype, "name">;
         block: Pick<Block, "from" | "to">;
         capacity: Event["capacity"];
+        attending: number;
         presenters: {
             user: Pick<User, "name">;
         }[];
@@ -23,6 +24,7 @@ const PlacesPage: NextPage = async () => {
                 columns: {
                     id: true,
                     capacity: true,
+                    attending: true,
                 },
                 with: {
                     archetype: {

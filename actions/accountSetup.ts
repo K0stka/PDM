@@ -1,7 +1,16 @@
 "use server";
 
 import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
-import { claims, db, eq, users } from "@/db";
+import {
+    and,
+    blockArchetypeLookup,
+    claims,
+    claims as claimsTable,
+    db,
+    eq,
+    sql,
+    users,
+} from "@/db";
 import { session, validateUser } from "@/auth/session";
 
 import { accountSetupSchema } from "@/validation/accountSetup";
@@ -50,8 +59,29 @@ export const setWillAttend = async (willAttend: boolean) => {
 
     if (!user.class) return UserError("Musíte být žákem třídy");
 
-    if (validateUser(user, { isAttending: true }))
-        await db.delete(claims).where(eq(claims.user, user.id));
+    if (validateUser(user, { isAttending: true })) {
+        const claims = await db.query.claims.findMany({
+            where: eq(claimsTable.user, user.id),
+        });
+
+        await db.delete(claimsTable).where(eq(claimsTable.user, user.id));
+
+        await Promise.allSettled(
+            claims.map((c) =>
+                db
+                    .update(blockArchetypeLookup)
+                    .set({
+                        capacity: sql`${blockArchetypeLookup.capacity} + ${1}`,
+                    })
+                    .where(
+                        and(
+                            eq(blockArchetypeLookup.block, c.block),
+                            eq(blockArchetypeLookup.archetype, c.archetype),
+                        ),
+                    ),
+            ),
+        );
+    }
 
     await db
         .update(users)
