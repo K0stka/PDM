@@ -9,17 +9,36 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
     recalculateAll,
     recalculateArchetypeInterested,
     recalculateBlockArchetypeLookup,
     recalculateEventAttending,
 } from "@/actions/lookup";
 
+import { Button } from "@/components/ui/button";
+import { Fragment } from "react";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { TriangleAlert } from "lucide-react";
+import { configuration } from "@/configuration/configuration";
 import { useServerAction } from "@/hooks/use-server-action";
 
-const ClientUtilityPage = () => {
+interface ClientUtilityPageProps {
+    claimsPerUser: {
+        id: number;
+        user: string;
+        claims: number;
+    }[];
+}
+
+const ClientUtilityPage = ({ claimsPerUser }: ClientUtilityPageProps) => {
     const { action: archetypeInterested, pending: archetypeInterestedPending } =
         useServerAction({
             action: recalculateArchetypeInterested,
@@ -95,6 +114,48 @@ const ClientUtilityPage = () => {
                     <ServerActionButton pending={allPending} onClick={all}>
                         Vše
                     </ServerActionButton>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Počet voleb na uživatele</CardTitle>
+                    <CardDescription>
+                        Slouží jako ladící zobrazení pro ověření správnosti dat.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-end gap-3">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Zobrazit</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Počet voleb na uživatele
+                                </DialogTitle>
+                                <DialogDescription>
+                                    Slouží jako ladící zobrazení pro ověření
+                                    správnosti dat.
+                                    <br />
+                                    <br />
+                                    Pozn.: Správný stav je, pokud má uživatel 0
+                                    až{" "}
+                                    {configuration.secondaryClaims
+                                        ? "dvojnásobek počtu bloků"
+                                        : "počet bloků"}{" "}
+                                    voleb v systému.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid grid-cols-2 gap-2">
+                                {claimsPerUser.map((user) => (
+                                    <Fragment key={user.id}>
+                                        <div>{user.user}</div>
+                                        <div>{user.claims}</div>
+                                    </Fragment>
+                                ))}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </CardContent>
             </Card>
         </div>
