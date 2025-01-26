@@ -22,7 +22,9 @@ const TimetablePage: NextPage = async () => {
                         },
                     },
                     attendances: {
-                        columns: {},
+                        columns: {
+                            id: true,
+                        },
                         with: {
                             user: {
                                 columns: {

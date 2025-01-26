@@ -16,20 +16,28 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+import {
+    fetchWithServerAction,
+    useServerAction,
+} from "@/hooks/use-server-action";
 
+import ClaimRow from "./claimRow";
 import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { SetState } from "@/lib/utilityTypes";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { User } from "@/lib/types";
+import { catchUserError } from "@/lib/utils";
 import { configuration } from "@/configuration/configuration";
 import { editUser } from "@/actions/user";
 import { editUserSchema } from "@/validation/user";
 import { getRoleIcon } from "@/configuration/roles";
+import { getUserClaims } from "@/actions/claim";
+import { toast } from "sonner";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useServerAction } from "@/hooks/use-server-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 interface EditDialogProps {
@@ -48,6 +56,28 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
         onSuccess: () => onOpenChange(false),
     });
 
+    const {
+        data: claims,
+        returningInitial: isClaimsLoading,
+        refresh: loadUserClaims,
+    } = fetchWithServerAction({
+        action: async (id: number) => {
+            const response = await getUserClaims(id);
+
+            const [data, error] = catchUserError(response);
+
+            if (error) {
+                toast.error("Nepodařilo se načíst volby uživatele");
+
+                return [];
+            }
+
+            return data;
+        },
+        initial: [],
+        initialArgs: false,
+    });
+
     const form = useForm<editUserSchema>({
         resolver: zodResolver(editUserSchema),
     });
@@ -63,6 +93,8 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
             isPresenting: user.isPresenting,
             isAdmin: user.isAdmin,
         });
+
+        loadUserClaims(user.id);
     }, [user]);
 
     const onSubmit = async (data: editUserSchema) => {
@@ -236,6 +268,21 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
                         Uložit
                     </ServerActionButton>
                 </DialogFooter>
+                {user.isAttending &&
+                    (!isClaimsLoading ? (
+                        <div className="flex flex-col gap-2">
+                            <div className="text-sm">Volby dílen</div>
+                            {claims.map((claim) => (
+                                <ClaimRow
+                                    key={claim.id}
+                                    claim={claim}
+                                    onRemove={() => loadUserClaims(user.id)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <Skeleton className="h-20" />
+                    ))}
             </DialogContent>
         </Dialog>
     );

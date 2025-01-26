@@ -1,18 +1,18 @@
 "use server";
 
 import { Archetype, Block, Claim } from "@/lib/types";
-import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import {
+    claims as Claims,
     and,
-    archetypes,
     asc,
     blockArchetypeLookup,
     blocks as blocksTable,
-    claims,
     db,
     eq,
     sql,
+    users,
 } from "@/db";
+import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import { canEditClaimsNow, saveClaimsSchema } from "@/validation/claim";
 import { session, validateUser } from "@/auth/session";
 
@@ -55,7 +55,7 @@ export const getBlocksState = async (): Promise<
     });
 
     const userClaims = await db.query.claims.findMany({
-        where: eq(claims.user, user.id),
+        where: eq(Claims.user, user.id),
     });
 
     const blockClaims: { [key: string]: Archetype["id"] } = {};
@@ -94,7 +94,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
     if (error) return error;
 
     const userClaims = await db.query.claims.findMany({
-        where: eq(claims.user, user.id),
+        where: eq(Claims.user, user.id),
     });
 
     const primaryClaimsToHandle: {
@@ -190,7 +190,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
             }
 
             if (claim.replacing !== null) {
-                await db.delete(claims).where(eq(claims.id, claim.replacing));
+                await db.delete(Claims).where(eq(Claims.id, claim.replacing));
                 await db
                     .update(blockArchetypeLookup)
                     .set({
@@ -207,7 +207,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
                     );
             }
 
-            await db.insert(claims).values({
+            await db.insert(Claims).values({
                 user: user.id,
                 archetype: claim.archetype,
                 block: claim.block,
@@ -233,9 +233,9 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
             }
 
             if (claim.replacing !== null)
-                await db.delete(claims).where(eq(claims.id, claim.replacing));
+                await db.delete(Claims).where(eq(Claims.id, claim.replacing));
 
-            await db.insert(claims).values({
+            await db.insert(Claims).values({
                 user: user.id,
                 archetype: claim.archetype,
                 block: claim.block,
@@ -257,12 +257,12 @@ export const removeClaim = async (claimId: Claim["id"]) => {
     if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
     const claim = await db.query.claims.findFirst({
-        where: eq(claims.id, claimId),
+        where: eq(Claims.id, claimId),
     });
 
     if (!claim) return UserError("Neplatné ID volby");
 
-    await db.delete(claims).where(eq(claims.id, claimId));
+    await db.delete(Claims).where(eq(Claims.id, claimId));
 
     if (!claim.secondary)
         await db
@@ -278,4 +278,36 @@ export const removeClaim = async (claimId: Claim["id"]) => {
             );
 
     revalidatePath("/admin/claims");
+};
+
+export const getUserClaims = async (userId: number) => {
+    const user = await session();
+
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    const questionedUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+    });
+
+    if (!questionedUser) return UserError("Neplatné ID uživatele");
+    if (!validateUser(questionedUser, { isAttending: true }))
+        return UserError("Uživatel není účastníkem");
+
+    return await db.query.claims.findMany({
+        where: eq(Claims.user, userId),
+        orderBy: asc(Claims.timestamp),
+        with: {
+            block: {
+                columns: {
+                    from: true,
+                    to: true,
+                },
+            },
+            archetype: {
+                columns: {
+                    name: true,
+                },
+            },
+        },
+    });
 };

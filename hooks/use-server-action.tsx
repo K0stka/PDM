@@ -122,7 +122,7 @@ export const useServerAction: UseServerActionHook = ({
 type FetchWithServerAction = <F extends Function>(options: {
     action: F;
     initial: AsyncFunctionDetails<F>["result"];
-    initialArgs?: AsyncFunctionDetails<F>["args"];
+    initialArgs?: AsyncFunctionDetails<F>["args"] | false;
     refreshAfter?: number;
 }) => {
     data: AsyncFunctionDetails<F>["result"];
@@ -171,7 +171,10 @@ export const fetchWithServerAction: FetchWithServerAction = ({
     };
 
     useEffect(() => {
-        fetchData(initialArgs ?? []).finally(() => setReturningInitial(false));
+        if (initialArgs !== false)
+            fetchData(initialArgs ?? []).finally(() =>
+                setReturningInitial(false),
+            );
 
         const interval = refreshAfter
             ? setInterval(fetchData, refreshAfter * 1000)
