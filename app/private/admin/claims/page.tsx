@@ -54,7 +54,7 @@ const ClaimsPage: NextPage = async () => {
                 ))}
                 {archetypes.map((archetype) => (
                     <Fragment key={archetype.id}>
-                        <div className="flex size-full max-w-80 items-center truncate text-nowrap bg-secondary px-4 py-2 text-secondary-foreground">
+                        <div className="flex size-full max-w-80 items-center bg-secondary px-4 py-2 text-secondary-foreground">
                             {archetype.name}
                         </div>
                         {blocks.map((block) => (
