@@ -25,6 +25,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Fragment } from "react";
+import { Separator } from "@/components/ui/separator";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { TriangleAlert } from "lucide-react";
 import { configuration } from "@/configuration/configuration";
@@ -36,9 +37,13 @@ interface ClientUtilityPageProps {
         user: string;
         claims: number;
     }[];
+    claimsPerUserFrequency: { [key: number]: number };
 }
 
-const ClientUtilityPage = ({ claimsPerUser }: ClientUtilityPageProps) => {
+const ClientUtilityPage = ({
+    claimsPerUser,
+    claimsPerUserFrequency,
+}: ClientUtilityPageProps) => {
     const { action: archetypeInterested, pending: archetypeInterestedPending } =
         useServerAction({
             action: recalculateArchetypeInterested,
@@ -146,7 +151,20 @@ const ClientUtilityPage = ({ claimsPerUser }: ClientUtilityPageProps) => {
                                     voleb v systému.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid grid-cols-2 gap-2">
+                            <b>Frekvence:</b>
+                            <div className="grid grid-cols-[auto,auto] gap-2">
+                                {Object.entries(claimsPerUserFrequency).map(
+                                    ([claims, count]) => (
+                                        <Fragment key={claims}>
+                                            <div>{claims}</div>
+                                            <div>{count}×</div>
+                                        </Fragment>
+                                    ),
+                                )}
+                            </div>
+                            <Separator />
+                            <b>Uživatelé:</b>
+                            <div className="grid grid-cols-[auto,auto] gap-2">
                                 {claimsPerUser.map((user) => (
                                     <Fragment key={user.id}>
                                         <div>{user.user}</div>
