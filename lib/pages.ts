@@ -3,6 +3,7 @@ import {
     CalendarRange,
     ChartColumnBig,
     ChartColumnStacked,
+    ChartPie,
     House,
     LibraryBig,
     LucideIcon,
@@ -148,6 +149,14 @@ export const getPages = ({
                 file: "/admin/places",
                 showInSidebar: true,
                 icon: MapPin,
+                category: "admin",
+            },
+            {
+                name: "Správa voleb",
+                path: "/claims",
+                file: "/admin/claims",
+                showInSidebar: true,
+                icon: ChartPie,
                 category: "admin",
             },
             ...(configuration.collectInterest

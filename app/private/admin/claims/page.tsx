@@ -1,36 +1,28 @@
 import { archetypes as Archetypes, blocks as Blocks, asc, db } from "@/db";
 
-import EventDetails from "./_components/eventDetails";
+import Cell from "./_components/cell";
 import { Fragment } from "react";
 import { NextPage } from "next";
 import PageTemplate from "@/components/utility/PageTemplate";
 import { getBlockName } from "@/validation/block";
 
-const TimetablePage: NextPage = async () => {
+const ClaimsPage: NextPage = async () => {
     const archetypes = await db.query.archetypes.findMany({
         orderBy: asc(Archetypes.name),
         with: {
-            events: {
+            blockLookup: true,
+            claims: {
+                columns: {
+                    id: true,
+                    block: true,
+                    secondary: true,
+                },
                 with: {
-                    place: true,
-                    presenters: {
-                        columns: {},
-                        with: {
-                            user: {
-                                columns: { name: true },
-                            },
-                        },
-                    },
-                    attendances: {
-                        columns: {},
-                        with: {
-                            user: {
-                                columns: {
-                                    id: true,
-                                    name: true,
-                                    colors: true,
-                                },
-                            },
+                    user: {
+                        columns: {
+                            id: true,
+                            name: true,
+                            colors: true,
                         },
                     },
                 },
@@ -43,7 +35,7 @@ const TimetablePage: NextPage = async () => {
     });
 
     return (
-        <PageTemplate title="Rozvrh">
+        <PageTemplate title="Správa voleb">
             <div
                 className="width-full grid items-center justify-items-center overflow-auto rounded-2xl"
                 style={{
@@ -66,16 +58,17 @@ const TimetablePage: NextPage = async () => {
                             {archetype.name}
                         </div>
                         {blocks.map((block) => (
-                            <div key={block.id}>
-                                {archetype.events
-                                    .filter((e) => e.block === block.id)
-                                    .map((event) => (
-                                        <EventDetails
-                                            key={event.id}
-                                            event={event}
-                                        />
-                                    ))}
-                            </div>
+                            <Cell
+                                key={block.id}
+                                lookup={
+                                    archetype.blockLookup.find(
+                                        (l) => l.block === block.id,
+                                    )!
+                                }
+                                claims={archetype.claims.filter(
+                                    (c) => c.block === block.id,
+                                )}
+                            />
                         ))}
                     </Fragment>
                 ))}
@@ -84,4 +77,4 @@ const TimetablePage: NextPage = async () => {
     );
 };
 
-export default TimetablePage;
+export default ClaimsPage;

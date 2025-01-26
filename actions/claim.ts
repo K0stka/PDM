@@ -18,6 +18,7 @@ import { session, validateUser } from "@/auth/session";
 
 import { UserErrorType } from "@/lib/utilityTypes";
 import { configuration } from "@/configuration/configuration";
+import { revalidatePath } from "next/cache";
 
 export type BlocksState = {
     id: number;
@@ -248,4 +249,33 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
 
     if (!succeeded)
         return UserError("Některá z vámi zvolených přednášek je již plná");
+};
+
+export const removeClaim = async (claimId: Claim["id"]) => {
+    const user = await session();
+
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    const claim = await db.query.claims.findFirst({
+        where: eq(claims.id, claimId),
+    });
+
+    if (!claim) return UserError("Neplatné ID volby");
+
+    await db.delete(claims).where(eq(claims.id, claimId));
+
+    if (!claim.secondary)
+        await db
+            .update(blockArchetypeLookup)
+            .set({
+                freeSpace: sql`${blockArchetypeLookup.freeSpace} + 1`,
+            })
+            .where(
+                and(
+                    eq(blockArchetypeLookup.block, claim.block),
+                    eq(blockArchetypeLookup.archetype, claim.archetype),
+                ),
+            );
+
+    revalidatePath("/admin/claims");
 };

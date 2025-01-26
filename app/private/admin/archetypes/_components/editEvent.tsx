@@ -15,7 +15,14 @@ import {
     deleteEvent,
     editEvent,
 } from "@/actions/events";
-import { MapPin, Pencil, Save, Trash2, Users } from "lucide-react";
+import {
+    GraduationCap,
+    MapPin,
+    Pencil,
+    Save,
+    Trash2,
+    Users,
+} from "lucide-react";
 import { catchUserError, inlineCatch } from "@/lib/utils";
 import { createNewEventSchema, editEventSchema } from "@/validation/events";
 import {
@@ -330,9 +337,20 @@ const EditEvent = ({
                                 <Pencil />
                             </Button>
                         </CardTitle>
-                        <CardDescription>
-                            <Users /> Kapacita: {event.capacity}, <MapPin />{" "}
-                            Místo: {event.place.name}
+                        <CardDescription className="flex flex-wrap gap-2">
+                            <div>
+                                <Users /> Kapacita: {event.capacity},
+                            </div>
+                            <div>
+                                <MapPin /> Místo: {event.place.name}
+                            </div>
+                            <div>
+                                <GraduationCap /> Přednášející:{" "}
+                                {event.presenters
+                                    .map((p) => p.user.name)
+                                    .join(", ")}
+                                {event.presenters.length === 0 && "-"}
+                            </div>
                         </CardDescription>
                     </CardHeader>
                 </>
