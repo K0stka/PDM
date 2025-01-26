@@ -12,6 +12,7 @@ const UtilityPage: NextPage = async () => {
             claims: count(claims.id),
         })
         .from(users)
+        .where(eq(users.isAttending, true))
         .leftJoin(claims, eq(claims.user, users.id))
         .orderBy(desc(count(claims.id)))
         .groupBy(users.id);
