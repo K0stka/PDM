@@ -153,7 +153,7 @@ export const getPages = ({
             },
             {
                 name: "Správa voleb",
-                path: "/claims",
+                path: "/claims/manage",
                 file: "/admin/claims",
                 showInSidebar: true,
                 icon: ChartPie,
