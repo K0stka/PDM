@@ -15,6 +15,9 @@ export const saveClaimsSchema = z.array(
 
 export type saveClaimsSchema = z.infer<typeof saveClaimsSchema>;
 
+export const claimsVisible = (user: { isAdmin: boolean }) =>
+    user.isAdmin || configuration.openClaimsOn.getTime() < Date.now();
+
 export const canEditClaimsNow = (user: { isAdmin: boolean }) =>
     (user.isAdmin || configuration.openClaimsOn.getTime() < Date.now()) &&
     configuration.closeClaimsOn.getTime() > Date.now();

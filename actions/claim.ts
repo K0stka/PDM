@@ -13,7 +13,11 @@ import {
     users,
 } from "@/db";
 import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
-import { canEditClaimsNow, saveClaimsSchema } from "@/validation/claim";
+import {
+    canEditClaimsNow,
+    claimsVisible,
+    saveClaimsSchema,
+} from "@/validation/claim";
 import { session, validateUser } from "@/auth/session";
 
 import { UserErrorType } from "@/lib/utilityTypes";
@@ -41,7 +45,7 @@ export const getBlocksState = async (): Promise<
 
     if (!validateUser(user, { isAttending: true })) return UnauthorizedError();
 
-    if (!canEditClaimsNow(user)) return UnauthorizedError();
+    if (!claimsVisible(user)) return UnauthorizedError();
 
     const blocks = await db.query.blocks.findMany({
         orderBy: asc(blocksTable.from),
@@ -157,8 +161,6 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
         secondaryClaimsToHandle.length === 0
     )
         return;
-
-    console.log(primaryClaimsToHandle, secondaryClaimsToHandle);
 
     const succeeded = await db.transaction(async (tx) => {
         for await (const claim of primaryClaimsToHandle) {

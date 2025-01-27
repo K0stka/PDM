@@ -16,7 +16,7 @@ import {
 
 import { Either } from "./utilityTypes";
 import { UserPermissions } from "./types";
-import { canEditClaimsNow } from "@/validation/claim";
+import { claimsVisible } from "@/validation/claim";
 import { configuration } from "@/configuration/configuration";
 import { roleNames } from "@/configuration/roles";
 
@@ -79,7 +79,7 @@ export const getPages = ({
                 icon: LibraryBig,
                 category: "attending",
             },
-            ...(canEditClaimsNow({ isAdmin })
+            ...(claimsVisible({ isAdmin })
                 ? [
                       {
                           name: "Volba přednášek",

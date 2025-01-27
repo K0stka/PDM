@@ -40,6 +40,7 @@ interface ComboBoxProps<T extends string | number> {
     values: ComboBoxValue<T>[];
     placeholder?: string;
     className?: string;
+    readonly?: boolean;
 }
 
 export function ComboBox<T extends string | number>({
@@ -48,9 +49,14 @@ export function ComboBox<T extends string | number>({
     onChange,
     placeholder,
     className,
+    readonly,
 }: ComboBoxProps<T>) {
     const isMobile = useIsMobile();
-    const [open, setOpen] = useState(false);
+    const [open, setOpenState] = useState(false);
+
+    const setOpen = (value: boolean) => {
+        if (!readonly) setOpenState(value);
+    };
 
     const selected = values.find((v) => v.value === value);
     const label = selected?.label ?? selected?.value;

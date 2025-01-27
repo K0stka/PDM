@@ -6,15 +6,18 @@ import {
     useServerAction,
 } from "@/hooks/use-server-action";
 import { getBlocksState, saveClaims } from "@/actions/claim";
+import { use, useState } from "react";
 
 import BlockElement from "./block";
+import { Button } from "@/components/ui/button";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserContext } from "@/components/context/auth";
+import { canEditClaimsNow } from "@/validation/claim";
 import { catchUserError } from "@/lib/utils";
 import { configuration } from "@/configuration/configuration";
 import { setWillAttend } from "@/actions/accountSetup";
 import { toast } from "sonner";
-import { useState } from "react";
 
 export interface BlockClaims {
     [key: Block["id"]]: {
@@ -24,6 +27,9 @@ export interface BlockClaims {
 }
 
 const ClientClaims = () => {
+    const user = use(UserContext);
+    const canEditClaims = canEditClaimsNow(user);
+
     const [claims, setClaims] = useState<BlockClaims>({});
 
     const {
@@ -164,6 +170,7 @@ const ClientClaims = () => {
                             onClaimsChange={(newClaims) =>
                                 updateClaims(block.id, newClaims)
                             }
+                            disabled={!canEditClaims}
                         />
                     ))}
                 </>
@@ -174,7 +181,7 @@ const ClientClaims = () => {
                     ))}
                 </>
             )}
-            <div className="flex items-center justify-end gap-4">
+            <div className="flex flex-wrap items-center justify-end gap-4">
                 <ServerActionButton
                     pending={wontAttendPending}
                     onClick={wontAttend}
@@ -182,12 +189,18 @@ const ClientClaims = () => {
                 >
                     Nezúčastním se
                 </ServerActionButton>
-                <ServerActionButton
-                    pending={loadingBlockState || saving}
-                    onClick={save}
-                >
-                    Uložit
-                </ServerActionButton>
+                {canEditClaimsNow(user) ? (
+                    <ServerActionButton
+                        pending={loadingBlockState || saving}
+                        onClick={save}
+                    >
+                        Uložit
+                    </ServerActionButton>
+                ) : (
+                    <Button variant="outline">
+                        Volba přednášek je uzavřena
+                    </Button>
+                )}
             </div>
         </div>
     );

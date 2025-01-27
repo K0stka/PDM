@@ -14,8 +14,8 @@ export const configuration: AppConfiguration = {
 
     collectAttendance: false,
 
-    openClaimsOn: new Date("2025-01-20T17:00:00Z"), // UTC
-    closeClaimsOn: new Date("2025-01-22T17:00:00Z"), // UTC
+    openClaimsOn: new Date("2025-01-27T17:00:00Z"), // UTC
+    closeClaimsOn: new Date("2025-01-28T09:00:00Z"), // UTC
     secondaryClaims: true,
 
     validClasses: [

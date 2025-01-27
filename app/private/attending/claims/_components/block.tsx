@@ -14,9 +14,15 @@ interface BlockElementProps {
     block: BlocksState[Block["id"]];
     claims: BlockClaims[Block["id"]];
     onClaimsChange: (claims: BlockClaims[Block["id"]]) => void;
+    disabled: boolean;
 }
 
-const BlockElement = ({ block, claims, onClaimsChange }: BlockElementProps) => {
+const BlockElement = ({
+    block,
+    claims,
+    onClaimsChange,
+    disabled,
+}: BlockElementProps) => {
     return (
         <Card key={block.id}>
             <CardHeader>
@@ -27,6 +33,7 @@ const BlockElement = ({ block, claims, onClaimsChange }: BlockElementProps) => {
                     <b className="-mb-3">Primární přednáška</b>
                 )}
                 <ComboBox
+                    readonly={disabled}
                     placeholder={
                         configuration.secondaryClaims
                             ? "Prosím vyberte primární přednášku"
@@ -58,6 +65,7 @@ const BlockElement = ({ block, claims, onClaimsChange }: BlockElementProps) => {
                     <>
                         <b className="-mb-3">Sekundární přednáška</b>
                         <ComboBox
+                            readonly={disabled}
                             placeholder="Prosím vyberte sekundární přednášku"
                             className="w-auto"
                             value={claims.secondary?.toString()}
