@@ -68,7 +68,7 @@ export function ComboBox<T extends string | number>({
                     <Button
                         variant="outline"
                         className={cn(
-                            "w-[150px] justify-start truncate",
+                            "w-[150px] justify-start overflow-auto",
                             className,
                         )}
                     >
@@ -98,7 +98,7 @@ export function ComboBox<T extends string | number>({
                 <Button
                     variant="outline"
                     className={cn(
-                        "w-[150px] justify-start truncate",
+                        "w-[150px] justify-start overflow-auto",
                         className,
                     )}
                 >

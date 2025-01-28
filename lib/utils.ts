@@ -21,6 +21,16 @@ export const inlineCatch = <T>(fn: () => T): [T, null] | [null, Error] => {
     }
 };
 
+export const asyncInlineCatch = async <T>(
+    fn: () => Promise<T>,
+): Promise<[T, null] | [null, Error]> => {
+    try {
+        return [(await fn()) as T, null];
+    } catch (error) {
+        return [null, error as Error];
+    }
+};
+
 export const UserError = (
     message: string | Error | ZodError,
 ): UserErrorType => ({
@@ -70,4 +80,10 @@ export const createMapById = <T, K extends keyof T>(
     data.forEach((d) => result.set(d[idKey], d));
 
     return result;
+};
+
+export const parseIntOrNull = (value: string) => {
+    const parsed = parseInt(value);
+
+    return isNaN(parsed) ? null : parsed;
 };

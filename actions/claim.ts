@@ -1,6 +1,6 @@
 "use server";
 
-import { Archetype, Block, Claim } from "@/lib/types";
+import { Archetype, Block, Claim, User } from "@/lib/types";
 import {
     claims as Claims,
     and,
@@ -12,8 +12,15 @@ import {
     sql,
     users,
 } from "@/db";
-import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import {
+    UnauthorizedError,
+    UserError,
+    asyncInlineCatch,
+    catchUserError,
+    inlineCatch,
+} from "@/lib/utils";
+import {
+    adminSaveClaimsSchema,
     canEditClaimsNow,
     claimsVisible,
     saveClaimsSchema,
@@ -38,15 +45,9 @@ export type BlocksState = {
     }[];
 }[];
 
-export const getBlocksState = async (): Promise<
-    UserErrorType | BlocksState
-> => {
-    const user = await session();
-
-    if (!validateUser(user, { isAttending: true })) return UnauthorizedError();
-
-    if (!claimsVisible(user)) return UnauthorizedError();
-
+const getBlockStateForUserId = async (
+    userId: User["id"],
+): Promise<BlocksState> => {
     const blocks = await db.query.blocks.findMany({
         orderBy: asc(blocksTable.from),
         with: {
@@ -59,7 +60,7 @@ export const getBlocksState = async (): Promise<
     });
 
     const userClaims = await db.query.claims.findMany({
-        where: eq(Claims.user, user.id),
+        where: eq(Claims.user, userId),
     });
 
     const blockClaims: { [key: string]: Archetype["id"] } = {};
@@ -86,34 +87,56 @@ export const getBlocksState = async (): Promise<
     }));
 };
 
-export const saveClaims = async (unsafe: saveClaimsSchema) => {
+export const getBlocksState = async (): Promise<
+    UserErrorType | BlocksState
+> => {
     const user = await session();
 
     if (!validateUser(user, { isAttending: true })) return UnauthorizedError();
 
-    if (!canEditClaimsNow(user)) return UnauthorizedError();
+    if (!claimsVisible(user)) return UnauthorizedError();
 
-    const [data, error] = inlineCatch(() => saveClaimsSchema.parse(unsafe));
+    return await getBlockStateForUserId(user.id);
+};
 
-    if (error) return error;
+export const getUserBlockState = async (
+    userId: number,
+): Promise<UserErrorType | BlocksState> => {
+    const user = await session();
 
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    const exists = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+    });
+
+    if (!exists) return UserError("Uživatel neexistuje");
+
+    return await getBlockStateForUserId(userId);
+};
+
+const saveUserClaims = async (
+    claims: saveClaimsSchema | adminSaveClaimsSchema["claims"],
+    userId: User["id"],
+    ignoreCapacity?: true,
+): Promise<boolean | UserErrorType> => {
     const userClaims = await db.query.claims.findMany({
-        where: eq(Claims.user, user.id),
+        where: eq(Claims.user, userId),
     });
 
     const primaryClaimsToHandle: {
         block: Block["id"];
-        archetype: Archetype["id"];
+        archetype: Archetype["id"] | null;
         replacing: Claim["id"] | null;
         replacingArchetype: Archetype["id"] | null;
     }[] = [];
     const secondaryClaimsToHandle: {
         block: Block["id"];
-        archetype: Archetype["id"];
+        archetype: Archetype["id"] | null;
         replacing: Claim["id"] | null;
     }[] = [];
 
-    for (const claim of data) {
+    for (const claim of claims) {
         const primaryUserClaim = userClaims.find(
             (c) => c.block === claim.block && c.secondary === false,
         );
@@ -134,7 +157,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
             });
 
         if (configuration.secondaryClaims) {
-            if (!claim.secondaryArchetype)
+            if (claim.secondaryArchetype === undefined)
                 return UserError("Nebyly odeslány všechny sekundární volby");
 
             const secondaryUserClaim = userClaims.find(
@@ -160,35 +183,40 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
         primaryClaimsToHandle.length === 0 &&
         secondaryClaimsToHandle.length === 0
     )
-        return;
+        return true;
 
     const succeeded = await db.transaction(async (tx) => {
         for await (const claim of primaryClaimsToHandle) {
-            await db
-                .update(blockArchetypeLookup)
-                .set({
-                    freeSpace: sql`${blockArchetypeLookup.freeSpace} - 1`,
-                })
-                .where(
-                    and(
-                        eq(blockArchetypeLookup.block, claim.block),
-                        eq(blockArchetypeLookup.archetype, claim.archetype),
-                    ),
-                );
+            if (claim.archetype !== null) {
+                await db
+                    .update(blockArchetypeLookup)
+                    .set({
+                        freeSpace: sql`${blockArchetypeLookup.freeSpace} - 1`,
+                    })
+                    .where(
+                        and(
+                            eq(blockArchetypeLookup.block, claim.block),
+                            eq(blockArchetypeLookup.archetype, claim.archetype),
+                        ),
+                    );
+            }
 
-            const freeSpace = (await db.query.blockArchetypeLookup.findFirst({
-                columns: {
-                    freeSpace: true,
-                },
-                where: and(
-                    eq(blockArchetypeLookup.block, claim.block),
-                    eq(blockArchetypeLookup.archetype, claim.archetype),
-                ),
-            }))!.freeSpace;
+            if (!ignoreCapacity && claim.archetype !== null) {
+                const freeSpace =
+                    (await db.query.blockArchetypeLookup.findFirst({
+                        columns: {
+                            freeSpace: true,
+                        },
+                        where: and(
+                            eq(blockArchetypeLookup.block, claim.block),
+                            eq(blockArchetypeLookup.archetype, claim.archetype),
+                        ),
+                    }))!.freeSpace;
 
-            if (freeSpace < 0) {
-                tx.rollback();
-                return false;
+                if (freeSpace < 0) {
+                    tx.rollback();
+                    return false;
+                }
             }
 
             if (claim.replacing !== null) {
@@ -209,48 +237,132 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
                     );
             }
 
-            await db.insert(Claims).values({
-                user: user.id,
-                archetype: claim.archetype,
-                block: claim.block,
-                secondary: false,
-                timestamp: new Date(),
-            });
+            if (claim.archetype !== null) {
+                await db.insert(Claims).values({
+                    user: userId,
+                    archetype: claim.archetype,
+                    block: claim.block,
+                    secondary: false,
+                    timestamp: new Date(),
+                });
+            }
         }
 
         for await (const claim of secondaryClaimsToHandle) {
-            const capacity = (await db.query.blockArchetypeLookup.findFirst({
-                columns: {
-                    capacity: true,
-                },
-                where: and(
-                    eq(blockArchetypeLookup.block, claim.block),
-                    eq(blockArchetypeLookup.archetype, claim.archetype),
-                ),
-            }))!.capacity;
+            if (claim.archetype !== null) {
+                const capacity = (await db.query.blockArchetypeLookup.findFirst(
+                    {
+                        columns: {
+                            capacity: true,
+                        },
+                        where: and(
+                            eq(blockArchetypeLookup.block, claim.block),
+                            eq(blockArchetypeLookup.archetype, claim.archetype),
+                        ),
+                    },
+                ))!.capacity;
 
-            if (capacity < 1) {
-                tx.rollback();
-                return false;
+                if (capacity < 1) {
+                    tx.rollback();
+                    return false;
+                }
             }
 
             if (claim.replacing !== null)
                 await db.delete(Claims).where(eq(Claims.id, claim.replacing));
 
-            await db.insert(Claims).values({
-                user: user.id,
-                archetype: claim.archetype,
-                block: claim.block,
-                secondary: true,
-                timestamp: new Date(),
-            });
+            if (claim.archetype !== null)
+                await db.insert(Claims).values({
+                    user: userId,
+                    archetype: claim.archetype,
+                    block: claim.block,
+                    secondary: true,
+                    timestamp: new Date(),
+                });
         }
 
         return true;
     });
 
+    return succeeded;
+};
+
+export const saveClaims = async (unsafe: saveClaimsSchema) => {
+    const user = await session();
+
+    if (!validateUser(user, { isAttending: true })) return UnauthorizedError();
+
+    if (!canEditClaimsNow(user)) return UnauthorizedError();
+
+    const [data, error] = inlineCatch(() => saveClaimsSchema.parse(unsafe));
+
+    if (error) return UserError(error);
+
+    for (const row of data) {
+        if (configuration.secondaryClaims) {
+            if (
+                data.some(
+                    (r) =>
+                        r.block !== row.block &&
+                        (r.primaryArchetype === row.primaryArchetype ||
+                            r.primaryArchetype === row.secondaryArchetype),
+                )
+            )
+                return UserError(
+                    "Nelze mít 2 stejné přednášky ve dvou blocích",
+                );
+
+            if (row.primaryArchetype === row.secondaryArchetype)
+                return UserError(
+                    "Nelze mít zvolenou stejnou primární a sekundární přednášku",
+                );
+        } else {
+            if (
+                data.some(
+                    (r) =>
+                        r.block !== row.block &&
+                        r.primaryArchetype === row.primaryArchetype,
+                )
+            )
+                return UserError(
+                    "Nelze mít 2 stejné přednášky ve dvou blocích",
+                );
+        }
+    }
+
+    const [succeeded, saveError] = inlineCatch(
+        async () => await saveUserClaims(data, user.id),
+    );
+
+    if (saveError) return UserError(saveError);
+
     if (!succeeded)
         return UserError("Některá z vámi zvolených přednášek je již plná");
+};
+
+export const adminSaveClaims = async (unsafe: adminSaveClaimsSchema) => {
+    const user = await session();
+
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    const [data, error] = inlineCatch(() =>
+        adminSaveClaimsSchema.parse(unsafe),
+    );
+
+    if (error) return UserError(error);
+
+    const targetUser = await db.query.users.findFirst({
+        where: and(eq(users.id, data.user), eq(users.isAttending, true)),
+    });
+    if (!targetUser) return UserError("Uživatel neexistuje");
+
+    const [succeeded, saveError] = catchUserError(
+        await saveUserClaims(data.claims, data.user, true),
+    );
+
+    if (saveError) return saveError;
+
+    if (!succeeded) return UserError("Volby přednášek se nepodařilo uložit");
 };
 
 export const removeClaim = async (claimId: Claim["id"]) => {
@@ -280,36 +392,4 @@ export const removeClaim = async (claimId: Claim["id"]) => {
             );
 
     revalidatePath("/admin/claims");
-};
-
-export const getUserClaims = async (userId: number) => {
-    const user = await session();
-
-    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
-
-    const questionedUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-    });
-
-    if (!questionedUser) return UserError("Neplatné ID uživatele");
-    if (!validateUser(questionedUser, { isAttending: true }))
-        return UserError("Uživatel není účastníkem");
-
-    return await db.query.claims.findMany({
-        where: eq(Claims.user, userId),
-        orderBy: asc(Claims.timestamp),
-        with: {
-            block: {
-                columns: {
-                    from: true,
-                    to: true,
-                },
-            },
-            archetype: {
-                columns: {
-                    name: true,
-                },
-            },
-        },
-    });
 };
