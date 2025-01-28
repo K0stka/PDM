@@ -121,44 +121,6 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
         blockId: Block["id"],
         newClaims: BlockClaims[number],
     ) => {
-        if (
-            blockState.some((b) => {
-                if (b.id === blockId) return false;
-
-                if (
-                    newClaims.primary !== null &&
-                    claims[b.id].primary === newClaims.primary
-                ) {
-                    toast.warning("Nelze vybrat 2 stejné primární přednášky");
-
-                    return true;
-                }
-
-                if (
-                    newClaims.secondary !== null &&
-                    newClaims.secondary === claims[b.id].primary
-                ) {
-                    toast.warning(
-                        "Nelze zvolit stejnou sekundární přednášku jako primární v jiném bloku",
-                    );
-
-                    return true;
-                }
-
-                if (
-                    newClaims.secondary !== null &&
-                    newClaims.secondary === claims[b.id].secondary
-                ) {
-                    toast.warning("Nelze vybrat 2 stejné sekundární přednášky");
-
-                    return true;
-                }
-
-                return false;
-            })
-        )
-            return;
-
         setClaims((oldClaims) => ({
             ...oldClaims,
             [blockId]: newClaims,
