@@ -68,7 +68,7 @@ export function ComboBox<T extends string | number>({
                     <Button
                         variant="outline"
                         className={cn(
-                            "w-[150px] justify-start overflow-auto",
+                            "w-[150px] justify-start overflow-x-auto overflow-y-hidden",
                             className,
                         )}
                     >
@@ -98,7 +98,7 @@ export function ComboBox<T extends string | number>({
                 <Button
                     variant="outline"
                     className={cn(
-                        "w-[150px] justify-start overflow-auto",
+                        "w-[150px] justify-start overflow-x-auto overflow-y-hidden",
                         className,
                     )}
                 >
