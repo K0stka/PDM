@@ -171,7 +171,7 @@ const EditDialog = ({ user, open, onOpenChange }: EditDialogProps) => {
                 onOpenChange(isOpen);
             }}
         >
-            <DialogContent className="grid max-w-[80vw] grid-cols-1 items-stretch gap-8 lg:grid-cols-[auto,auto]">
+            <DialogContent className="grid max-w-[70vw] grid-cols-1 items-stretch gap-8 lg:grid-cols-[1fr,1fr]">
                 <div className="flex flex-col gap-4">
                     <DialogHeader>
                         <DialogTitle>Upravit uživatele</DialogTitle>
