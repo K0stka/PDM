@@ -71,17 +71,28 @@ export const printTime = (date: Date) => format(date, "H:mm");
 
 export const printDateTime = (date: Date) => format(date, "d. M. yyyy H:mm");
 
-export const createMapById = <T, K extends keyof T, L extends keyof T>(
+export function createMapById<T, K extends keyof T>(
+    data: T[],
+    idKey: K,
+): Map<T[K], T>;
+
+export function createMapById<T, K extends keyof T, L extends keyof T>(
     data: T[],
     idKey: K,
     dataKey: L,
-): Map<T[K], T[L]> => {
-    const result: Map<T[K], T[L]> = new Map();
+): Map<T[K], T[L]>;
 
-    data.forEach((d) => result.set(d[idKey], d[dataKey]));
-
+export function createMapById<T, K extends keyof T>(
+    data: T[],
+    idKey: K,
+    dataKey?: keyof T,
+) {
+    const result = new Map<T[K], unknown>();
+    data.forEach((d) => {
+        result.set(d[idKey], dataKey ? d[dataKey] : d);
+    });
     return result;
-};
+}
 
 export const parseIntOrNull = (value: string) => {
     const parsed = parseInt(value);
