@@ -29,6 +29,7 @@ import { Separator } from "@/components/ui/separator";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { TriangleAlert } from "lucide-react";
 import { configuration } from "@/configuration/configuration";
+import { generateAttendances } from "@/actions/utils";
 import { useServerAction } from "@/hooks/use-server-action";
 
 interface ClientUtilityPageProps {
@@ -75,6 +76,16 @@ const ClientUtilityPage = ({
         successToast: "Mezivýpočty úspěšně obnoveny",
         loadingToast: "Obnovování mezivýpočtů",
         errorToastTitle: "Při obnovování mezivýpočtů došlo k chybě",
+    });
+
+    const {
+        action: generateAttendancesAction,
+        pending: generateAttendancesPending,
+    } = useServerAction({
+        action: generateAttendances,
+        successToast: "Účastníci byli úspěšně rozřazeni",
+        loadingToast: "Rozřazování účastníků...",
+        errorToastTitle: "Při rozřazování účastníků došlo k chybě",
     });
 
     return (
@@ -174,6 +185,28 @@ const ClientUtilityPage = ({
                             </div>
                         </DialogContent>
                     </Dialog>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Rozřazení účastníků</CardTitle>
+                    <CardDescription>
+                        Varování: Tato akce smaže veškeré předchozí rozřazení
+                        účastníků do přednášek.
+                        <br />
+                        <br />
+                        Rozřadí účastníky do přednášek podle jejich voleb
+                        případně podle toho, které přednášky mají nejméně
+                        účastníků.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-end gap-3">
+                    <ServerActionButton
+                        pending={generateAttendancesPending}
+                        onClick={generateAttendancesAction}
+                    >
+                        Rozřadit účastníky
+                    </ServerActionButton>
                 </CardContent>
             </Card>
         </div>

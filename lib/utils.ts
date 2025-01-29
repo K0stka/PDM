@@ -71,13 +71,14 @@ export const printTime = (date: Date) => format(date, "H:mm");
 
 export const printDateTime = (date: Date) => format(date, "d. M. yyyy H:mm");
 
-export const createMapById = <T, K extends keyof T>(
+export const createMapById = <T, K extends keyof T, L extends keyof T>(
     data: T[],
     idKey: K,
-): Map<T[typeof idKey], T> => {
-    const result: Map<T[typeof idKey], T> = new Map();
+    dataKey: L,
+): Map<T[K], T[L]> => {
+    const result: Map<T[K], T[L]> = new Map();
 
-    data.forEach((d) => result.set(d[idKey], d));
+    data.forEach((d) => result.set(d[idKey], d[dataKey]));
 
     return result;
 };

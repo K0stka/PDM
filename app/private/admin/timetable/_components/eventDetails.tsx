@@ -77,7 +77,7 @@ const EventDetails = ({ event }: EventDetailsProps) => {
                     </div>
                 )}
                 {event.attendances.map((attendance) => (
-                    <UserRow attendance={attendance} />
+                    <UserRow key={attendance.id} attendance={attendance} />
                 ))}
                 {/* <DialogFooter></DialogFooter> */}
             </DialogContent>
