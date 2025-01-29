@@ -51,7 +51,7 @@ export const setWillAttend = async (willAttend: boolean) => {
 
     if (
         configuration.openClaimsOn.getTime() > Date.now() ||
-        configuration.closeClaimsOn.getTime() < Date.now()
+        (configuration.closeClaimsOn.getTime() < Date.now() && willAttend)
     )
         return UnauthorizedError();
 
