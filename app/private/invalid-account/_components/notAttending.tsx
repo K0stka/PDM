@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 
 import ServerActionButton from "@/components/utility/ServerActionButton";
+import { configuration } from "@/configuration/configuration";
 import { setWillAttend } from "@/actions/accountSetup";
 import { useServerAction } from "@/hooks/use-server-action";
 
@@ -30,14 +31,16 @@ const NotAttendingClientPage = () => {
                     místa v přednáškách ostatním zájemcům.
                 </CardDescription>
             </CardHeader>
-            <CardFooter>
-                <ServerActionButton
-                    pending={pending}
-                    onClick={() => action(true)}
-                >
-                    Chci se zúčastnit
-                </ServerActionButton>
-            </CardFooter>
+            {configuration.closeClaimsOn.getTime() > Date.now() && (
+                <CardFooter>
+                    <ServerActionButton
+                        pending={pending}
+                        onClick={() => action(true)}
+                    >
+                        Chci se zúčastnit
+                    </ServerActionButton>
+                </CardFooter>
+            )}
         </Card>
     );
 };
