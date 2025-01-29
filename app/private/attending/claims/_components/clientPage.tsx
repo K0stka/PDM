@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Archetype, Block } from "@/lib/types";
 import {
     fetchWithServerAction,
@@ -10,6 +11,7 @@ import { use, useState } from "react";
 
 import BlockElement from "./block";
 import { Button } from "@/components/ui/button";
+import SRGH from "@/components/icons/SRGH";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserContext } from "@/components/context/auth";
@@ -160,6 +162,16 @@ const ClientClaims = () => {
 
     return (
         <div className="flex flex-col gap-4">
+            {configuration.closeClaimsOn.getTime() < Date.now() && (
+                <Alert>
+                    <AlertTitle>Volby přednášek jsou uzavřeny</AlertTitle>
+                    <AlertDescription className="text-muted-foreground">
+                        Pokud máte nějaký problém s vašimi přednáškami,
+                        kontaktujte prosím <SRGH variant="outline" />{" "}
+                        Studentskou radu GH.
+                    </AlertDescription>
+                </Alert>
+            )}
             {!loadingBlockState ? (
                 <>
                     {blockState.map((block) => (
