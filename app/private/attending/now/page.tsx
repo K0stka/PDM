@@ -22,7 +22,7 @@ const NowAttendingPage: NextPage = async () => {
     });
 
     return (
-        <PageTemplate title="Kde mám teď být?">
+        <PageTemplate>
             <NowClientPage attendances={attendances} />
         </PageTemplate>
     );

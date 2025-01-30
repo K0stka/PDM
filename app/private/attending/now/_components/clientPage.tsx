@@ -60,7 +60,7 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
             {currentEvent && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Právě se děje</CardTitle>
+                        <CardTitle>Aktuální přednáška</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3">
                         <div>
@@ -81,7 +81,7 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
             {nextEvent && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Co bude následovat</CardTitle>
+                        <CardTitle>Nadcházející přednáška</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3">
                         <div>
