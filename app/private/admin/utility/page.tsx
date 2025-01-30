@@ -24,11 +24,21 @@ const UtilityPage: NextPage = async () => {
             (claimsPerUserFrequency[row.claims] ?? 0) + 1;
     });
 
+    const attendees = await db.query.users.findMany({
+        columns: {
+            id: true,
+            name: true,
+        },
+        where: eq(users.isAttending, true),
+        orderBy: users.name,
+    });
+
     return (
         <PageTemplate title="Nástroje">
             <ClientUtilityPage
                 claimsPerUser={claimsPerUser}
                 claimsPerUserFrequency={claimsPerUserFrequency}
+                attendees={attendees}
             />
         </PageTemplate>
     );

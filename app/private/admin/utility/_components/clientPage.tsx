@@ -5,6 +5,7 @@ import {
     Card,
     CardContent,
     CardDescription,
+    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -24,10 +25,14 @@ import {
 } from "@/actions/lookup";
 
 import { Button } from "@/components/ui/button";
+import { ComboBox } from "@/components/ui/combobox";
+import EditUser from "./editUser";
 import { Fragment } from "react";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { TriangleAlert } from "lucide-react";
+import { User } from "@/lib/types";
 import { configuration } from "@/configuration/configuration";
 import { generateAttendances } from "@/actions/utils";
 import { useServerAction } from "@/hooks/use-server-action";
@@ -39,11 +44,13 @@ interface ClientUtilityPageProps {
         claims: number;
     }[];
     claimsPerUserFrequency: { [key: number]: number };
+    attendees: Pick<User, "id" | "name">[];
 }
 
 const ClientUtilityPage = ({
     claimsPerUser,
     claimsPerUserFrequency,
+    attendees,
 }: ClientUtilityPageProps) => {
     const { action: archetypeInterested, pending: archetypeInterestedPending } =
         useServerAction({
@@ -209,6 +216,7 @@ const ClientUtilityPage = ({
                     </ServerActionButton>
                 </CardContent>
             </Card>
+            <EditUser attendees={attendees} />
         </div>
     );
 };
