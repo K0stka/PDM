@@ -8,6 +8,7 @@ import {
     LibraryBig,
     LucideIcon,
     MapPin,
+    MapPinned,
     PocketKnife,
     SquareCheck,
     Timer,
@@ -61,15 +62,19 @@ export const getPages = ({
 
     if (isAttending)
         pages.push(
-            // {
-            // 	name: "Kde mám teď být?",
-            // 	path: "/attending",
-            // 	file: "/attending/now",
-            // 	showInSidebar: true,
-            // 	showOnHomepage: true,
-            // 	icon: MapPinned,
-            // 	category: "attending",
-            // },
+            ...(configuration.closeClaimsOn.getTime() <= Date.now()
+                ? [
+                      {
+                          name: "Kde mám teď být?",
+                          path: "/attending",
+                          file: "/attending/now",
+                          showInSidebar: true,
+                          showOnHomepage: true,
+                          icon: MapPinned,
+                          category: "attending",
+                      } as PageInfo,
+                  ]
+                : []),
             {
                 name: "Anotace přednášek",
                 path: "/workshops",
